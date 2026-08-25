@@ -9,24 +9,14 @@
         .logo { font-size: 48px; margin-bottom: 20px; }
         h1 { font-family: 'Sora', sans-serif; font-size: 32px; margin-bottom: 10px; color: #FFD700; }
         p { font-size: 16px; margin-bottom: 30px; color: #a3a3a3; }
-        
-        /* Disclaimer */
         .disclaimer-box { background: rgba(255, 0, 0, 0.15); border: 2px solid #ff0000; color: #ff5555; padding: 20px; border-radius: 10px; margin-bottom: 30px; font-weight: bold; font-size: 16px; max-width: 450px; text-align: left; line-height: 1.6; }
         .disclaimer-box ul { margin-top: 10px; padding-left: 20px; }
-        
-        /* Timer */
         #timer { font-size: 28px; font-weight: bold; color: #FFD700; margin-bottom: 20px; }
-        
-        /* Buttons */
         button { padding: 18px 40px; background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%); color: #000; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); margin-top: 10px; }
         button:hover { transform: scale(1.05); }
         button:disabled { background: #475569; color: #fff; cursor: not-allowed; transform: none; }
-        
-        /* Key Box */
         #keyBox { margin-top: 30px; font-size: 24px; font-weight: bold; color: #FFD700; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 15px; display: none; word-break: break-all; max-width: 400px; }
         #notice { margin-top: 20px; font-size: 14px; color: #666666; }
-        
-        /* Already claimed style */
         .already-claimed-box { background: rgba(255, 165, 0, 0.2); border: 2px solid #ffa500; color: #ffa500; padding: 20px; border-radius: 10px; max-width: 450px; display: none; }
     </style>
 </head>
@@ -48,7 +38,6 @@
     <p id="mainText">Click the button below to claim your 5-day key.</p>
     <button id="claimBtn" onclick="claimKey()">Claim Your Key</button>
     
-    <!-- Already claimed box with option to start again -->
     <div class="already-claimed-box" id="alreadyClaimedBox">
         <p><strong>This device has already used all available keys.</strong></p>
         <p>To get a new key, you must complete the LootLabs task again.</p>
@@ -59,31 +48,31 @@
     <p id="notice">You must use this key within 20 minutes.</p>
 
     <script>
-        // Detect if this is a page reload (F5 or browser refresh)
+        // 1. Detect if this is a refresh in the SAME tab (sessionStorage persists only for the tab)
         const isReload = performance.navigation.type === 1;
-
-        // If they refreshed and haven't claimed yet, immediately boot them back to LootLabs
-        if (isReload && !localStorage.getItem('claimed')) {
+        if (isReload && !sessionStorage.getItem('startedHere')) {
+            // This is a refresh, redirect to LootLabs immediately
             window.location.href = "https://lootdest.org/s?dsG2iOR2";
+        } else {
+            // First load of this tab
+            sessionStorage.setItem('startedHere', 'true');
         }
 
-        // If the device has already claimed a key, show "Start Again" option
-        if (localStorage.getItem('claimed')) {
+        // 2. Check if user has already claimed on this device (localStorage)
+        if (localStorage.getItem('claimed') === 'true') {
+            // Show "already used" box
             document.getElementById('disclaimerBox').style.display = 'none';
             document.getElementById('mainText').style.display = 'none';
             document.getElementById('claimBtn').style.display = 'none';
             document.getElementById('alreadyClaimedBox').style.display = 'block';
         } else {
-            // Start the 2-minute countdown
+            // 3. Start 2-minute countdown
             let timeLeft = 120; 
             const timerElement = document.getElementById('timer');
-
             const countdown = setInterval(() => {
                 if (timeLeft <= 0) {
                     clearInterval(countdown);
-                    // Time is up. Send them back to LootLabs to start over.
                     window.location.href = "https://lootdest.org/s?dsG2iOR2";
-                    return;
                 }
                 timeLeft--;
                 const minutes = Math.floor(timeLeft / 60);
@@ -91,16 +80,15 @@
                 timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
             }, 1000);
 
-            // Generate unique device ID
+            // 4. Get or generate device ID
             if (!localStorage.getItem('deviceId')) {
                 localStorage.setItem('deviceId', 'DEV-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10));
             }
             const deviceId = localStorage.getItem('deviceId');
 
+            // 5. Claim key function
             async function claimKey() {
                 const btn = document.getElementById('claimBtn');
-                const keyBox = document.getElementById('keyBox');
-
                 btn.disabled = true;
                 btn.textContent = "Claiming...";
 
@@ -109,38 +97,35 @@
                     const data = await response.json();
 
                     if (data.success) {
-                        // Stop the 2-minute timer
                         clearInterval(countdown);
+                        localStorage.setItem('claimed', 'true'); // Mark as claimed
                         
-                        // Mark as claimed
-                        localStorage.setItem('claimed', 'true');
-
-                        // ✅ AUTO-COPY KEY TO CLIPBOARD
+                        // Auto-copy to clipboard
                         try {
                             await navigator.clipboard.writeText(data.key);
-                            keyBox.innerHTML = `Your Key: <br><br> <span style="font-size:28px;">${data.key}</span><br><br><small>✅ Key copied to clipboard!</small>`;
                         } catch (e) {
-                            // Fallback copy method
                             const textArea = document.createElement('textarea');
                             textArea.value = data.key;
                             document.body.appendChild(textArea);
                             textArea.select();
                             document.execCommand('copy');
                             document.body.removeChild(textArea);
-                            keyBox.innerHTML = `Your Key: <br><br> <span style="font-size:28px;">${data.key}</span><br><br><small>✅ Key copied to clipboard!</small>`;
                         }
 
+                        // Show the key
+                        const keyBox = document.getElementById('keyBox');
                         keyBox.style.display = 'block';
+                        keyBox.innerHTML = `Your Key: <br><br> <span style="font-size:28px;">${data.key}</span><br><br><small>✅ Key copied to clipboard!</small>`;
                         btn.textContent = "Key Claimed!";
                         document.getElementById('notice').innerHTML = "Please use this key in the extension. This page will close soon.";
-                        
-                        // Give them 30 seconds to copy, then force them back to LootLabs
+
+                        // Redirect to LootLabs after 30 seconds
                         setTimeout(function() {
                             window.location.href = "https://lootdest.org/s?dsG2iOR2";
                         }, 30000);
                     } else {
                         if (data.error.includes("already generated")) {
-                            // Show already claimed box
+                            // Device already has a key, show the reset box
                             localStorage.setItem('claimed', 'true');
                             document.getElementById('claimBtn').style.display = 'none';
                             document.getElementById('alreadyClaimedBox').style.display = 'block';
@@ -157,7 +142,7 @@
                 }
             }
 
-            // Allow the button to work
+            // Expose claimKey to window
             window.claimKey = claimKey;
         }
 
@@ -165,7 +150,6 @@
         function startAgain() {
             localStorage.removeItem('claimed');
             localStorage.removeItem('deviceId');
-            // Clear session if any
             sessionStorage.clear();
             window.location.href = "https://lootdest.org/s?dsG2iOR2";
         }
