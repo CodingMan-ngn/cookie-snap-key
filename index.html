@@ -1,115 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Snap - Claim Key</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a3e 100%);
-            color: #fff;
-            text-align: center;
-            padding: 50px 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .logo {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-            color: #a78bfa;
-        }
-        p {
-            font-size: 16px;
-            margin-bottom: 30px;
-            color: #94a3b8;
-        }
-        button {
-            padding: 18px 40px;
-            background: #8b5cf6;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
-        }
-        button:hover {
-            background: #7c3aed;
-            transform: scale(1.05);
-        }
-        button:disabled {
-            background: #475569;
-            cursor: not-allowed;
-            transform: none;
-        }
-        #keyBox {
-            margin-top: 30px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #22c55e;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 20px;
-            border-radius: 10px;
-            display: none;
-            word-break: break-all;
-            max-width: 400px;
-        }
-        #note {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #64748b;
-        }
-    </style>
-</head>
-<body>
-    <div class="logo">🍪</div>
-    <h1>Cookie Snap Key Claim</h1>
-    <p>Click the button below to claim your 5-day key</p>
-    
-    <button id="claimBtn" onclick="claimKey()">Claim Your Key</button>
-    
-    <div id="keyBox"></div>
-    <p id="note">This key is valid for 5 days. You must complete the task to continue.</p>
+<script>
+    // Generate a unique Device ID if it doesn't exist
+    if (!localStorage.getItem('deviceId')) {
+        localStorage.setItem('deviceId', 'DEV-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10));
+    }
+    const deviceId = localStorage.getItem('deviceId');
 
-    <script>
-        async function claimKey() {
-            const btn = document.getElementById('claimBtn');
-            const keyBox = document.getElementById('keyBox');
+    // Prevent refresh bypass: If already claimed, show a message and block
+    if (localStorage.getItem('claimed')) {
+        document.getElementById('keyBox').innerHTML = "⚠️ Key already generated for this device.<br>Please close this tab.";
+        document.getElementById('keyBox').style.display = 'block';
+        document.getElementById('claimBtn').style.display = 'none';
+    } else {
+        // Auto-close timer (60 seconds)
+        setTimeout(function() {
+            document.getElementById('keyBox').innerHTML = "⏳ Tab closing in 10 seconds...";
+            document.getElementById('keyBox').style.display = 'block';
+            setTimeout(function() {
+                window.close(); // Attempt to close the tab (may be blocked by browser, fallback message shown)
+                // Fallback: redirect to about:blank if browser blocks close
+                setTimeout(() => { window.location.href = 'about:blank'; }, 500);
+            }, 10000);
+        }, 60000); // 1 minute timer
+    }
 
-            btn.disabled = true;
-            btn.textContent = "Claiming...";
+    async function claimKey() {
+        const btn = document.getElementById('claimBtn');
+        const keyBox = document.getElementById('keyBox');
 
-            try {
-                // 🔑 Call your Cloudflare Worker to generate the key
-                const response = await fetch('https://cookie-snap-keys.j26064135.workers.dev/claim');
-                const data = await response.json();
+        btn.disabled = true;
+        btn.textContent = "Claiming...";
 
-                if (data.success) {
-                    // Show the key
-                    keyBox.style.display = 'block';
-                    keyBox.innerHTML = `Your Key: <br><br> <span style="font-size:28px;">${data.key}</span>`;
-                    btn.textContent = "Key Claimed!";
+        try {
+            const response = await fetch(`https://cookie-snap-keys.j26064135.workers.dev/claim?deviceId=${deviceId}`);
+            const data = await response.json();
+
+            if (data.success) {
+                // Mark as claimed so they cannot refresh and get a new one
+                localStorage.setItem('claimed', 'true');
+                
+                // Show the key
+                keyBox.style.display = 'block';
+                keyBox.innerHTML = `Your Key: <br><br> <span style="font-size:28px;">${data.key}</span><br><br><small>⚠️ Expires in 20 mins if not activated!</small>`;
+                btn.textContent = "Key Claimed!";
+                // Start the auto-close timer
+                setTimeout(function() {
+                    window.close();
+                    setTimeout(() => { window.location.href = 'about:blank'; }, 500);
+                }, 60000);
+            } else {
+                alert("Error: " + (data.error || "Could not claim key"));
+                // Refresh bypass detected, block them
+                if (data.error.includes("already generated")) {
+                    localStorage.setItem('claimed', 'true');
+                    document.getElementById('claimBtn').style.display = 'none';
+                    document.getElementById('keyBox').innerHTML = "⚠️ Key already generated for this device.<br>Please close this tab.";
+                    document.getElementById('keyBox').style.display = 'block';
                 } else {
-                    alert("Error: " + (data.error || "Could not claim key"));
                     btn.disabled = false;
                     btn.textContent = "Try Again";
                 }
-            } catch (error) {
-                alert("Network error: Could not connect to server");
-                btn.disabled = false;
-                btn.textContent = "Try Again";
             }
+        } catch (error) {
+            alert("Network error: Could not connect to server");
+            btn.disabled = false;
+            btn.textContent = "Try Again";
         }
-    </script>
-</body>
-</html>
+    }
+</script>
