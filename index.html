@@ -28,7 +28,8 @@
     <div class="disclaimer-box" id="disclaimerBox">
         ⚠️ <strong>IMPORTANT RULES - DO NOT IGNORE:</strong>
         <ul>
-            <li><strong>DO NOT REFRESH AFTER 30 SECONDS:</strong> Refreshing after 30 seconds will send you back to LootLabs.</li>
+            <li><strong>REFRESHING WITHIN 1 MINUTE IS SAFE.</strong> You can refresh to claim your key.</li>
+            <li><strong>DO NOT REFRESH AFTER 1 MINUTE</strong> if you haven't claimed – you'll be sent back to LootLabs.</li>
             <li><strong>DO NOT TRY TO BYPASS:</strong> This page is device-bound. Only one key per device.</li>
             <li><strong>TIME LIMIT:</strong> You have <strong><span id="timer">2:00</span></strong> to claim your key.</li>
             <li><strong>AFTER CLAIM:</strong> You have exactly 30 seconds to copy your key before being redirected.</li>
@@ -61,21 +62,21 @@
             // 2. Detect refresh (same tab)
             const isReload = performance.navigation.type === 1;
             if (isReload) {
-                // Check if it's been more than 30 seconds since original load
+                // Check if it's been more than 60 seconds since original load
                 const startTime = parseInt(sessionStorage.getItem('startTime')) || 0;
                 const elapsed = Date.now() - startTime;
-                if (elapsed > 30000) {
-                    // Refresh after 30 sec -> redirect to LootLabs
+                if (elapsed > 60000) {
+                    // Refresh after 60 sec -> redirect to LootLabs
                     window.location.href = "https://lootdest.org/s?dsG2iOR2";
                 }
-                // If refresh within 30 sec, allow to continue (no redirect)
+                // If refresh within 60 sec, allow to continue (no redirect)
             } else {
                 // First load: set start time
                 sessionStorage.setItem('startTime', Date.now().toString());
                 sessionStorage.setItem('startedHere', 'true');
             }
 
-            // 3. Check if device already claimed (localStorage)
+            // 3. Check if device actually claimed a key (localStorage)
             if (localStorage.getItem('claimed') === 'true') {
                 document.getElementById('disclaimerBox').style.display = 'none';
                 document.getElementById('mainText').style.display = 'none';
@@ -133,10 +134,9 @@
                             keyBox.innerHTML = `Your Key: <br><br> <span style="font-size:28px;">${data.key}</span><br><br><small>✅ Key copied to clipboard!</small>`;
                             btn.textContent = "Key Claimed!";
                             document.getElementById('notice').innerHTML = "Please use this key in the extension.";
-                            // Show the strong warning
                             document.getElementById('keyWarning').style.display = 'block';
 
-                            // Redirect to LootLabs after 30 seconds (so they can't sit on page)
+                            // Redirect to LootLabs after 30 seconds
                             setTimeout(function() {
                                 window.location.href = "https://lootdest.org/s?dsG2iOR2";
                             }, 30000);
