@@ -26,11 +26,10 @@
     <h1>Cookie Snap Key Claim</h1>
     
     <div class="disclaimer-box" id="disclaimerBox">
-        ⚠️ <strong>IMPORTANT RULES - DO NOT IGNORE:</strong>
+        ⚠️ <strong>IMPORTANT RULES:</strong>
         <ul>
-            <li><strong>REFRESHING WITHIN 1 MINUTE IS SAFE.</strong> You can refresh to claim your key.</li>
-            <li><strong>DO NOT REFRESH AFTER 1 MINUTE</strong> if you haven't claimed – you'll be sent back to LootLabs.</li>
-            <li><strong>DO NOT TRY TO BYPASS:</strong> This page is device-bound. Only one key per device.</li>
+            <li><strong>REFRESHING WITHIN 60 SECONDS IS SAFE.</strong> You can refresh to claim your key.</li>
+            <li><strong>DO NOT REFRESH AFTER 60 SECONDS</strong> if you haven't claimed – you'll be sent back to LootLabs.</li>
             <li><strong>TIME LIMIT:</strong> You have <strong><span id="timer">2:00</span></strong> to claim your key.</li>
             <li><strong>AFTER CLAIM:</strong> You have exactly 30 seconds to copy your key before being redirected.</li>
             <li><strong>KEY VALIDITY:</strong> Key expires in 20 minutes if not activated in the extension.</li>
@@ -51,29 +50,37 @@
     <div id="keyWarning">⚠️ COPY YOUR KEY NOW! DO NOT REFRESH OR YOU WILL LOSE IT!</div>
 
     <script>
+        // 🚨 Disable Ctrl+U (View Source) and Right-Click globally
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S'))) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
         // 1. MUST come from LootLabs (contains ?data= verification token)
         const urlParams = new URLSearchParams(window.location.search);
         const dataCode = urlParams.get('data');
 
         if (!dataCode) {
-            // No LootLabs token -> redirect to LootLabs link immediately
             window.location.href = "https://lootdest.org/s?dsG2iOR2";
         } else {
-            // 2. Detect refresh (same tab)
-            const isReload = performance.navigation.type === 1;
-            if (isReload) {
-                // Check if it's been more than 60 seconds since original load
-                const startTime = parseInt(sessionStorage.getItem('startTime')) || 0;
-                const elapsed = Date.now() - startTime;
+            // 2. FIX: Simple 60-second refresh check (No buggy performance API)
+            let startTime = parseInt(sessionStorage.getItem('pageStartTime')) || 0;
+            let now = Date.now();
+
+            if (startTime === 0) {
+                // First Load - Set the time
+                sessionStorage.setItem('pageStartTime', now.toString());
+            } else {
+                // It's a refresh.
+                let elapsed = now - startTime;
                 if (elapsed > 60000) {
-                    // Refresh after 60 sec -> redirect to LootLabs
+                    // Refreshed after 60 seconds - Kick to LootLabs
                     window.location.href = "https://lootdest.org/s?dsG2iOR2";
                 }
-                // If refresh within 60 sec, allow to continue (no redirect)
-            } else {
-                // First load: set start time
-                sessionStorage.setItem('startTime', Date.now().toString());
-                sessionStorage.setItem('startedHere', 'true');
+                // If under 60 sec, they are allowed to refresh and continue.
             }
 
             // 3. Check if device actually claimed a key (localStorage)
