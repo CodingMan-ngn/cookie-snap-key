@@ -5,62 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cookie Snap - Claim Key</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0a0a;
-            color: #fff;
-            text-align: center;
-            padding: 50px 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0a0a; color: #fff; text-align: center; padding: 50px 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .logo { font-size: 48px; margin-bottom: 20px; }
         h1 { font-family: 'Sora', sans-serif; font-size: 32px; margin-bottom: 10px; color: #FFD700; }
         p { font-size: 16px; margin-bottom: 30px; color: #a3a3a3; }
         
-        /* Warning Box */
-        .warning-box {
+        /* Comprehensive Disclaimer Box */
+        .disclaimer-box {
             background: rgba(255, 0, 0, 0.15);
             border: 2px solid #ff0000;
             color: #ff5555;
-            padding: 15px 20px;
+            padding: 20px;
             border-radius: 10px;
             margin-bottom: 30px;
             font-weight: bold;
-            font-size: 18px;
-            max-width: 400px;
+            font-size: 16px;
+            max-width: 450px;
+            text-align: left;
+            line-height: 1.6;
+        }
+        .disclaimer-box ul {
+            margin-top: 10px;
+            padding-left: 20px;
         }
         
-        button {
-            padding: 18px 40px;
-            background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
-            color: #000;
-            border: none;
-            border-radius: 50px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-        }
+        #timer { font-size: 28px; font-weight: bold; color: #FFD700; margin-bottom: 20px; }
+        button { padding: 18px 40px; background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%); color: #000; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); }
         button:hover { transform: scale(1.05); }
         button:disabled { background: #475569; color: #fff; cursor: not-allowed; transform: none; }
-        
-        #keyBox {
-            margin-top: 30px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #FFD700;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 20px;
-            border-radius: 15px;
-            display: none;
-            word-break: break-all;
-            max-width: 400px;
-        }
+        #keyBox { margin-top: 30px; font-size: 24px; font-weight: bold; color: #FFD700; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 15px; display: none; word-break: break-all; max-width: 400px; }
         #notice { margin-top: 20px; font-size: 14px; color: #666666; }
     </style>
 </head>
@@ -68,44 +41,60 @@
     <div class="logo">🍪</div>
     <h1>Cookie Snap Key Claim</h1>
     
-    <!-- DISCLAIMER / WARNING -->
-    <div class="warning-box">
-        ⚠️ **DO NOT REFRESH OR TRY TO BYPASS!**<br>
-        This page will close automatically after 1 minute.
+    <!-- FULL DISCLAIMER ON LOAD -->
+    <div class="disclaimer-box">
+        ⚠️ <strong>IMPORTANT RULES - DO NOT IGNORE:</strong>
+        <ul>
+            <li><strong>DO NOT REFRESH:</strong> Refreshing will instantly send you back to LootLabs.</li>
+            <li><strong>DO NOT TRY TO BYPASS:</strong> This page is device-bound. Only one key per device.</li>
+            <li><strong>TIME LIMIT:</strong> You have <strong><span id="timer">2:00</span></strong> to claim your key.</li>
+            <li><strong>AFTER CLAIM:</strong> You have exactly 30 seconds to copy your key before being redirected.</li>
+            <li><strong>KEY VALIDITY:</strong> Key expires in 20 minutes if not activated in the extension.</li>
+        </ul>
     </div>
     
-    <p>Complete the task to claim your 5-day key</p>
-    
+    <p>Click the button below to claim your 5-day key.</p>
     <button id="claimBtn" onclick="claimKey()">Claim Your Key</button>
     
     <div id="keyBox"></div>
     <p id="notice">You must use this key within 20 minutes.</p>
 
     <script>
-        // Generate a unique Device ID for this browser profile
+        // 1. REFRESH BYPASS DETECTION (Immediate kickback to LootLabs)
+        if (sessionStorage.getItem('started')) {
+            window.location.href = "https://lootdest.org/s?dsG2iOR2";
+        } else {
+            sessionStorage.setItem('started', 'true');
+        }
+
+        // 2. TIMER LOGIC (2 Minutes / 120 Seconds)
+        let timeLeft = 120; 
+        const timerElement = document.getElementById('timer');
+
+        const countdown = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                // Time is up. Send them back to LootLabs to start over.
+                window.location.href = "https://lootdest.org/s?dsG2iOR2";
+                return;
+            }
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }, 1000);
+
+        // 3. DEVICE ID & CLAIM LOGIC
         if (!localStorage.getItem('deviceId')) {
             localStorage.setItem('deviceId', 'DEV-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10));
         }
         const deviceId = localStorage.getItem('deviceId');
 
-        // 1. Prevent Refresh Bypass (show warning instead of claim button)
+        // If they already claimed (shouldn't happen without refresh, but just in case)
         if (localStorage.getItem('claimed')) {
-            document.getElementById('claimBtn').style.display = 'none';
-            document.getElementById('keyBox').innerHTML = "⚠️ Key already generated for this device.<br>Do NOT refresh to bypass.<br>Please close this tab.";
-            document.getElementById('keyBox').style.display = 'block';
-        } else {
-            // 2. Auto-Close Timer (1 Minute)
-            setTimeout(function() {
-                document.getElementById('notice').innerHTML = "⏳ Tab closing in 10 seconds...";
-                setTimeout(function() {
-                    window.close();
-                    // Fallback if browser blocks close()
-                    setTimeout(() => { window.location.href = 'about:blank'; }, 500);
-                }, 10000);
-            }, 60000);
+            window.location.href = "https://lootdest.org/s?dsG2iOR2";
         }
 
-        // 3. Claim Key Function
         async function claimKey() {
             const btn = document.getElementById('claimBtn');
             const keyBox = document.getElementById('keyBox');
@@ -118,24 +107,24 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // Stop the 2-minute timer
+                    clearInterval(countdown);
+                    
                     // Mark as claimed
                     localStorage.setItem('claimed', 'true');
-                    
+
                     keyBox.style.display = 'block';
                     keyBox.innerHTML = `Your Key: <br><br> <span style="font-size:28px;">${data.key}</span><br><br><small>⚠️ Expires in 20 mins if not activated!</small>`;
                     btn.textContent = "Key Claimed!";
+                    document.getElementById('notice').innerHTML = "Please copy your key now. You have 30 seconds before this page closes.";
                     
-                    // Start Auto-Close Timer
+                    // Give them 30 seconds to copy, then force them back to LootLabs
                     setTimeout(function() {
-                        window.close();
-                        setTimeout(() => { window.location.href = 'about:blank'; }, 500);
-                    }, 60000);
+                        window.location.href = "https://lootdest.org/s?dsG2iOR2";
+                    }, 30000);
                 } else {
                     if (data.error.includes("already generated")) {
-                        localStorage.setItem('claimed', 'true');
-                        document.getElementById('claimBtn').style.display = 'none';
-                        document.getElementById('keyBox').innerHTML = "⚠️ Key already generated for this device.<br>Do NOT refresh to bypass.<br>Please close this tab.";
-                        document.getElementById('keyBox').style.display = 'block';
+                        window.location.href = "https://lootdest.org/s?dsG2iOR2";
                     } else {
                         alert("Error: " + (data.error || "Could not claim key"));
                         btn.disabled = false;
