@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0a0a; /* Dark Background */
+            background: #0a0a0a;
             color: #fff;
             text-align: center;
             padding: 50px 20px;
@@ -17,42 +17,38 @@
             justify-content: center;
             align-items: center;
         }
-        .logo {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-family: 'Sora', sans-serif;
-            font-size: 32px;
-            margin-bottom: 10px;
-            color: #FFD700; /* Gold Accent */
-        }
-        p {
-            font-size: 16px;
+        .logo { font-size: 48px; margin-bottom: 20px; }
+        h1 { font-family: 'Sora', sans-serif; font-size: 32px; margin-bottom: 10px; color: #FFD700; }
+        p { font-size: 16px; margin-bottom: 30px; color: #a3a3a3; }
+        
+        /* Warning Box */
+        .warning-box {
+            background: rgba(255, 0, 0, 0.15);
+            border: 2px solid #ff0000;
+            color: #ff5555;
+            padding: 15px 20px;
+            border-radius: 10px;
             margin-bottom: 30px;
-            color: #a3a3a3; /* Muted Text */
+            font-weight: bold;
+            font-size: 18px;
+            max-width: 400px;
         }
+        
         button {
             padding: 18px 40px;
             background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
             color: #000;
             border: none;
-            border-radius: 50px; /* Rounded Pill */
+            border-radius: 50px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
             box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
         }
-        button:hover {
-            transform: scale(1.05);
-        }
-        button:disabled {
-            background: #475569;
-            color: #fff;
-            cursor: not-allowed;
-            transform: none;
-        }
+        button:hover { transform: scale(1.05); }
+        button:disabled { background: #475569; color: #fff; cursor: not-allowed; transform: none; }
+        
         #keyBox {
             margin-top: 30px;
             font-size: 24px;
@@ -65,16 +61,19 @@
             word-break: break-all;
             max-width: 400px;
         }
-        #notice {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #666666;
-        }
+        #notice { margin-top: 20px; font-size: 14px; color: #666666; }
     </style>
 </head>
 <body>
     <div class="logo">🍪</div>
     <h1>Cookie Snap Key Claim</h1>
+    
+    <!-- DISCLAIMER / WARNING -->
+    <div class="warning-box">
+        ⚠️ **DO NOT REFRESH OR TRY TO BYPASS!**<br>
+        This page will close automatically after 1 minute.
+    </div>
+    
     <p>Complete the task to claim your 5-day key</p>
     
     <button id="claimBtn" onclick="claimKey()">Claim Your Key</button>
@@ -89,10 +88,10 @@
         }
         const deviceId = localStorage.getItem('deviceId');
 
-        // 1. Prevent Refresh Bypass
+        // 1. Prevent Refresh Bypass (show warning instead of claim button)
         if (localStorage.getItem('claimed')) {
             document.getElementById('claimBtn').style.display = 'none';
-            document.getElementById('keyBox').innerHTML = "⚠️ Key already generated for this device.<br>Please close this tab.";
+            document.getElementById('keyBox').innerHTML = "⚠️ Key already generated for this device.<br>Do NOT refresh to bypass.<br>Please close this tab.";
             document.getElementById('keyBox').style.display = 'block';
         } else {
             // 2. Auto-Close Timer (1 Minute)
@@ -132,11 +131,10 @@
                         setTimeout(() => { window.location.href = 'about:blank'; }, 500);
                     }, 60000);
                 } else {
-                    // Handle specific errors
                     if (data.error.includes("already generated")) {
                         localStorage.setItem('claimed', 'true');
                         document.getElementById('claimBtn').style.display = 'none';
-                        document.getElementById('keyBox').innerHTML = "⚠️ Key already generated for this device.<br>Please close this tab.";
+                        document.getElementById('keyBox').innerHTML = "⚠️ Key already generated for this device.<br>Do NOT refresh to bypass.<br>Please close this tab.";
                         document.getElementById('keyBox').style.display = 'block';
                     } else {
                         alert("Error: " + (data.error || "Could not claim key"));
