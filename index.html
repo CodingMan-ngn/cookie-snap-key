@@ -18,6 +18,7 @@
         #keyBox { margin-top: 30px; font-size: 24px; font-weight: bold; color: #FFD700; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 15px; display: none; word-break: break-all; max-width: 400px; }
         #notice { margin-top: 20px; font-size: 14px; color: #666666; }
         .already-claimed-box { background: rgba(255, 165, 0, 0.2); border: 2px solid #ffa500; color: #ffa500; padding: 20px; border-radius: 10px; max-width: 450px; display: none; }
+        #keyWarning { color: #ff5555; font-weight: bold; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
@@ -27,7 +28,7 @@
     <div class="disclaimer-box" id="disclaimerBox">
         ⚠️ <strong>IMPORTANT RULES - DO NOT IGNORE:</strong>
         <ul>
-            <li><strong>DO NOT REFRESH:</strong> Refreshing will instantly send you back to LootLabs.</li>
+            <li><strong>DO NOT REFRESH AFTER 30 SECONDS:</strong> Refreshing after 30 seconds will send you back to LootLabs.</li>
             <li><strong>DO NOT TRY TO BYPASS:</strong> This page is device-bound. Only one key per device.</li>
             <li><strong>TIME LIMIT:</strong> You have <strong><span id="timer">2:00</span></strong> to claim your key.</li>
             <li><strong>AFTER CLAIM:</strong> You have exactly 30 seconds to copy your key before being redirected.</li>
@@ -46,6 +47,7 @@
     
     <div id="keyBox"></div>
     <p id="notice">You must use this key within 20 minutes.</p>
+    <div id="keyWarning">⚠️ COPY YOUR KEY NOW! DO NOT REFRESH OR YOU WILL LOSE IT!</div>
 
     <script>
         // 1. MUST come from LootLabs (contains ?data= verification token)
@@ -58,9 +60,18 @@
         } else {
             // 2. Detect refresh (same tab)
             const isReload = performance.navigation.type === 1;
-            if (isReload && !sessionStorage.getItem('startedHere')) {
-                window.location.href = "https://lootdest.org/s?dsG2iOR2";
+            if (isReload) {
+                // Check if it's been more than 30 seconds since original load
+                const startTime = parseInt(sessionStorage.getItem('startTime')) || 0;
+                const elapsed = Date.now() - startTime;
+                if (elapsed > 30000) {
+                    // Refresh after 30 sec -> redirect to LootLabs
+                    window.location.href = "https://lootdest.org/s?dsG2iOR2";
+                }
+                // If refresh within 30 sec, allow to continue (no redirect)
             } else {
+                // First load: set start time
+                sessionStorage.setItem('startTime', Date.now().toString());
                 sessionStorage.setItem('startedHere', 'true');
             }
 
@@ -121,8 +132,11 @@
                             keyBox.style.display = 'block';
                             keyBox.innerHTML = `Your Key: <br><br> <span style="font-size:28px;">${data.key}</span><br><br><small>✅ Key copied to clipboard!</small>`;
                             btn.textContent = "Key Claimed!";
-                            document.getElementById('notice').innerHTML = "Please use this key in the extension. This page will close soon.";
+                            document.getElementById('notice').innerHTML = "Please use this key in the extension.";
+                            // Show the strong warning
+                            document.getElementById('keyWarning').style.display = 'block';
 
+                            // Redirect to LootLabs after 30 seconds (so they can't sit on page)
                             setTimeout(function() {
                                 window.location.href = "https://lootdest.org/s?dsG2iOR2";
                             }, 30000);
