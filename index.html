@@ -64,23 +64,28 @@
         const dataCode = urlParams.get('data');
 
         if (!dataCode) {
-            // No verification token -> redirect to NEW LootLabs link
             window.location.href = "https://loot-link.com/s?OcqajUzG";
         } else {
-            // 2. Simple 60-second refresh check
-            let startTime = parseInt(sessionStorage.getItem('pageStartTime')) || 0;
-            let now = Date.now();
-
-            if (startTime === 0) {
-                sessionStorage.setItem('pageStartTime', now.toString());
+            // 2. Check if this is a fresh LootLabs completion (new code)
+            let lastDataCode = sessionStorage.getItem('lastDataCode');
+            
+            if (lastDataCode !== dataCode) {
+                // New LootLabs completion! Reset device ID and claimed status to allow new key.
+                localStorage.removeItem('claimed');
+                localStorage.removeItem('deviceId');
+                sessionStorage.setItem('lastDataCode', dataCode);
+                sessionStorage.setItem('pageStartTime', Date.now().toString()); // Reset the 60-second clock
             } else {
+                // Same LootLabs completion (it's a refresh). Check the 60-second rule.
+                let startTime = parseInt(sessionStorage.getItem('pageStartTime')) || 0;
+                let now = Date.now();
                 let elapsed = now - startTime;
                 if (elapsed > 60000) {
                     window.location.href = "https://loot-link.com/s?OcqajUzG";
                 }
             }
 
-            // 3. Check if device already claimed
+            // 3. Check if device already claimed for this specific LootLabs completion
             if (localStorage.getItem('claimed') === 'true') {
                 document.getElementById('disclaimerBox').style.display = 'none';
                 document.getElementById('mainText').style.display = 'none';
@@ -101,7 +106,7 @@
                     timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
                 }, 1000);
 
-                // 4. Device ID
+                // 4. Device ID (regenerated for new LootLabs completion)
                 if (!localStorage.getItem('deviceId')) {
                     localStorage.setItem('deviceId', 'DEV-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10));
                 }
