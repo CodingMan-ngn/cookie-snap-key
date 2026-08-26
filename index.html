@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="in">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,7 +32,7 @@
             <li><strong>DO NOT REFRESH AFTER 60 SECONDS</strong> if you haven't claimed – you'll be sent back to LootLabs.</li>
             <li><strong>TIME LIMIT:</strong> You have <strong><span id="timer">2:00</span></strong> to claim your key.</li>
             <li><strong>AFTER CLAIM:</strong> You have exactly 30 seconds to copy your key before being redirected.</li>
-            <li><strong>KEY VALIDITY:</strong> Key expires in 20 minutes if not activated in the extension.</li>
+            <li><strong>KEY VALIDITY:</strong> Key expires in 10 minutes if not activated in the extension.</li>
         </ul>
     </div>
     
@@ -51,7 +51,7 @@
 
     <script>
         // Disable Ctrl+U / Right-Click
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('context menu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
             if ((e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S'))) {
                 e.preventDefault();
