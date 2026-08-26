@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="in">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,11 +23,11 @@
     <p id="status">Loading secure token...</p>
     <button id="claimBtn" onclick="claimKey()" style="display:none;">Claim Your Key</button>
     <div id="keyBox"></div>
-    <div id="errorBox">❌ This claim link has expired.<br>Please go back and complete the task again.</div>
+    <div id="errorbox">❌ This claim link has expired.<br>Please go back and complete the task again.</div>
 
     <script>
         // Disable right-click and Ctrl+U
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('context menu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) {
                 e.preventDefault();
