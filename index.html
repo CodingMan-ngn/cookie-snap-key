@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="in">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Snap - Claim Key</title>
+    <title>Cookie Snap - Key Claim</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0a0a; color: #fff; text-align: center; padding: 50px 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #000; color: #fff; text-align: center; padding: 50px 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .logo { font-size: 48px; margin-bottom: 20px; }
         h1 { font-family: 'Sora', sans-serif; font-size: 32px; margin-bottom: 10px; color: #FFD700; }
         p { font-size: 16px; margin-bottom: 30px; color: #a3a3a3; }
@@ -19,12 +19,33 @@
         #notice { margin-top: 20px; font-size: 14px; color: #666666; }
         .already-claimed-box { background: rgba(255, 165, 0, 0.2); border: 2px solid #ffa500; color: #ffa500; padding: 20px; border-radius: 10px; max-width: 450px; display: none; }
         #keyWarning { color: #ff5555; font-weight: bold; margin-top: 15px; display: none; }
+        
+        /* Black screen anti-bypass overlay */
+        #blackScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; color: #fff; display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; z-index: 9999;
+        }
+        #blackScreen .msg { font-size: 24px; font-weight: bold; max-width: 600px; line-height: 1.6; }
+        #blackScreen .sub { font-size: 16px; color: #aaa; margin-top: 20px; }
+        
+        /* Ctrl+U Trap */
+        #ctrlUTrap {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; color: red; display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; z-index: 99999;
+        }
+        #ctrlUTrap .bro { font-size: 80px; font-weight: 900; color: #ff0000; text-shadow: 0 0 30px #ff0000; }
+        #ctrlUTrap .warning { font-size: 20px; color: #fff; margin-top: 20px; }
     </style>
 </head>
 <body>
     <div class="logo">🍪</div>
     <h1>Cookie Snap Key Claim</h1>
     
+    <!-- Disclaimer -->
     <div class="disclaimer-box" id="disclaimerBox">
         ⚠️ <strong>IMPORTANT RULES:</strong>
         <ul>
@@ -39,6 +60,7 @@
     <p id="mainText">Click the button below to claim your 5-day key.</p>
     <button id="claimBtn" onclick="claimKey()">Claim Your Key</button>
     
+    <!-- Already claimed box -->
     <div class="already-claimed-box" id="alreadyClaimedBox">
         <p><strong>This device has already used all available keys.</strong></p>
         <p>To get a new key, you must complete the LootLabs task again.</p>
@@ -46,15 +68,29 @@
     </div>
     
     <div id="keyBox"></div>
-    <p id="notice">You must use this key within 20 minutes.</p>
+    <p id="notice">You must use this key within 10 minutes.</p>
     <div id="keyWarning">⚠️ COPY YOUR KEY NOW! DO NOT REFRESH OR YOU WILL LOSE IT!</div>
 
+    <!-- Black Screen Overlay -->
+    <div id="blackScreen">
+        <div class="msg">Just do the verification man its like fifteen minutes and emphasize on thats what am meant to use to feed</div>
+        <div class="sub">Please complete the LootLabs task to get a new key.</div>
+    </div>
+
+    <!-- Ctrl+U Trap Overlay -->
+    <div id="ctrlUTrap">
+        <div class="bro">REALLY BRO</div>
+        <div class="warning">i have a ping of ur ip so maintain i see u fcking retard</div>
+    </div>
+
     <script>
-        // Disable Ctrl+U / Right-Click
-        document.addEventListener('context menu', function(e) { e.preventDefault(); });
+        // Disable right-click and Ctrl+U
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S'))) {
+            if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) {
                 e.preventDefault();
+                // Show Ctrl+U trap
+                document.getElementById('ctrlUTrap').style.display = 'flex';
                 return false;
             }
         });
@@ -64,7 +100,10 @@
         const dataCode = urlParams.get('data');
 
         if (!dataCode) {
-            window.location.href = "https://loot-link.com/s?OcqajUzG";
+            // No verification token -> black screen bypass warning, NOT redirect
+            document.getElementById('blackScreen').style.display = 'flex';
+            // (Optional: after a few seconds, redirect to LootLabs)
+            setTimeout(() => { window.location.href = "https://loot-link.com/s?OcqajUzG"; }, 5000);
         } else {
             // 2. Check if this is a fresh LootLabs completion (new code)
             let lastDataCode = sessionStorage.getItem('lastDataCode');
@@ -74,19 +113,22 @@
                 localStorage.removeItem('claimed');
                 localStorage.removeItem('deviceId');
                 sessionStorage.setItem('lastDataCode', dataCode);
-                sessionStorage.setItem('pageStartTime', Date.now().toString()); // Reset the 60-second clock
+                sessionStorage.setItem('pageStartTime', Date.now().toString());
             } else {
-                // Same LootLabs completion (it's a refresh). Check the 60-second rule.
+                // Same code (refresh). Check 60-second rule.
                 let startTime = parseInt(sessionStorage.getItem('pageStartTime')) || 0;
                 let now = Date.now();
                 let elapsed = now - startTime;
                 if (elapsed > 60000) {
-                    window.location.href = "https://loot-link.com/s?OcqajUzG";
+                    // Too late, show black screen anti-bypass
+                    document.getElementById('blackScreen').style.display = 'flex';
+                    setTimeout(() => { window.location.href = "https://loot-link.com/s?OcqajUzG"; }, 5000);
                 }
             }
 
-            // 3. Check if device already claimed for this specific LootLabs completion
+            // 3. Check if device already claimed for this code
             if (localStorage.getItem('claimed') === 'true') {
+                // Show already claimed box
                 document.getElementById('disclaimerBox').style.display = 'none';
                 document.getElementById('mainText').style.display = 'none';
                 document.getElementById('claimBtn').style.display = 'none';
@@ -98,7 +140,9 @@
                 const countdown = setInterval(() => {
                     if (timeLeft <= 0) {
                         clearInterval(countdown);
-                        window.location.href = "https://loot-link.com/s?OcqajUzG";
+                        // Time is up -> black screen anti-bypass
+                        document.getElementById('blackScreen').style.display = 'flex';
+                        setTimeout(() => { window.location.href = "https://loot-link.com/s?OcqajUzG"; }, 5000);
                     }
                     timeLeft--;
                     const minutes = Math.floor(timeLeft / 60);
@@ -106,13 +150,13 @@
                     timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
                 }, 1000);
 
-                // 4. Device ID (regenerated for new LootLabs completion)
+                // 4. Device ID
                 if (!localStorage.getItem('deviceId')) {
                     localStorage.setItem('deviceId', 'DEV-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10));
                 }
                 const deviceId = localStorage.getItem('deviceId');
 
-                // 5. Claim key (with LootLabs token)
+                // 5. Claim key
                 async function claimKey() {
                     const btn = document.getElementById('claimBtn');
                     btn.disabled = true;
@@ -154,7 +198,8 @@
                                 document.getElementById('alreadyClaimedBox').style.display = 'block';
                             } else if (data.error.includes("verification failed")) {
                                 alert("LootLabs verification failed. Please go back and complete the ad again.");
-                                window.location.href = "https://loot-link.com/s?OcqajUzG";
+                                document.getElementById('blackScreen').style.display = 'flex';
+                                setTimeout(() => { window.location.href = "https://loot-link.com/s?OcqajUzG"; }, 3000);
                             } else {
                                 alert("Error: " + (data.error || "Could not claim key"));
                                 btn.disabled = false;
