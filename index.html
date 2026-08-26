@@ -50,7 +50,7 @@
     <div id="keyWarning">⚠️ COPY YOUR KEY NOW! DO NOT REFRESH OR YOU WILL LOSE IT!</div>
 
     <script>
-        // 🚨 Disable Ctrl+U (View Source) and Right-Click globally
+        // Disable Ctrl+U / Right-Click
         document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
         document.addEventListener('keydown', function(e) {
             if ((e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S'))) {
@@ -64,26 +64,23 @@
         const dataCode = urlParams.get('data');
 
         if (!dataCode) {
-            window.location.href = "https://lootdest.org/s?dsG2iOR2";
+            // No verification token -> redirect to NEW LootLabs link
+            window.location.href = "https://loot-link.com/s?OcqajUzG";
         } else {
-            // 2. FIX: Simple 60-second refresh check (No buggy performance API)
+            // 2. Simple 60-second refresh check
             let startTime = parseInt(sessionStorage.getItem('pageStartTime')) || 0;
             let now = Date.now();
 
             if (startTime === 0) {
-                // First Load - Set the time
                 sessionStorage.setItem('pageStartTime', now.toString());
             } else {
-                // It's a refresh.
                 let elapsed = now - startTime;
                 if (elapsed > 60000) {
-                    // Refreshed after 60 seconds - Kick to LootLabs
-                    window.location.href = "https://lootdest.org/s?dsG2iOR2";
+                    window.location.href = "https://loot-link.com/s?OcqajUzG";
                 }
-                // If under 60 sec, they are allowed to refresh and continue.
             }
 
-            // 3. Check if device actually claimed a key (localStorage)
+            // 3. Check if device already claimed
             if (localStorage.getItem('claimed') === 'true') {
                 document.getElementById('disclaimerBox').style.display = 'none';
                 document.getElementById('mainText').style.display = 'none';
@@ -96,7 +93,7 @@
                 const countdown = setInterval(() => {
                     if (timeLeft <= 0) {
                         clearInterval(countdown);
-                        window.location.href = "https://lootdest.org/s?dsG2iOR2";
+                        window.location.href = "https://loot-link.com/s?OcqajUzG";
                     }
                     timeLeft--;
                     const minutes = Math.floor(timeLeft / 60);
@@ -124,7 +121,6 @@
                             clearInterval(countdown);
                             localStorage.setItem('claimed', 'true');
 
-                            // Auto-copy to clipboard
                             try {
                                 await navigator.clipboard.writeText(data.key);
                             } catch (e) {
@@ -143,9 +139,8 @@
                             document.getElementById('notice').innerHTML = "Please use this key in the extension.";
                             document.getElementById('keyWarning').style.display = 'block';
 
-                            // Redirect to LootLabs after 30 seconds
                             setTimeout(function() {
-                                window.location.href = "https://lootdest.org/s?dsG2iOR2";
+                                window.location.href = "https://loot-link.com/s?OcqajUzG";
                             }, 30000);
                         } else {
                             if (data.error.includes("already generated")) {
@@ -154,7 +149,7 @@
                                 document.getElementById('alreadyClaimedBox').style.display = 'block';
                             } else if (data.error.includes("verification failed")) {
                                 alert("LootLabs verification failed. Please go back and complete the ad again.");
-                                window.location.href = "https://lootdest.org/s?dsG2iOR2";
+                                window.location.href = "https://loot-link.com/s?OcqajUzG";
                             } else {
                                 alert("Error: " + (data.error || "Could not claim key"));
                                 btn.disabled = false;
@@ -171,12 +166,11 @@
             }
         }
 
-        // Reset and go back to LootLabs
         function startAgain() {
             localStorage.removeItem('claimed');
             localStorage.removeItem('deviceId');
             sessionStorage.clear();
-            window.location.href = "https://lootdest.org/s?dsG2iOR2";
+            window.location.href = "https://loot-link.com/s?OcqajUzG";
         }
     </script>
 </body>
