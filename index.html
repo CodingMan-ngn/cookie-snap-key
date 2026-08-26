@@ -1,226 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="in">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Snap - Key Claim</title>
+    <title>Cookie Snap - Claim Key</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #000; color: #fff; text-align: center; padding: 50px 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .logo { font-size: 48px; margin-bottom: 20px; }
-        h1 { font-family: 'Sora', sans-serif; font-size: 32px; margin-bottom: 10px; color: #FFD700; }
-        p { font-size: 16px; margin-bottom: 30px; color: #a3a3a3; }
-        .disclaimer-box { background: rgba(255, 0, 0, 0.15); border: 2px solid #ff0000; color: #ff5555; padding: 20px; border-radius: 10px; margin-bottom: 30px; font-weight: bold; font-size: 16px; max-width: 450px; text-align: left; line-height: 1.6; }
-        .disclaimer-box ul { margin-top: 10px; padding-left: 20px; }
-        #timer { font-size: 28px; font-weight: bold; color: #FFD700; margin-bottom: 20px; }
-        button { padding: 18px 40px; background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%); color: #000; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); margin-top: 10px; }
+        h1 { font-size: 32px; color: #FFD700; }
+        p { font-size: 16px; color: #aaa; }
+        button { padding: 18px 40px; background: linear-gradient(135deg, #FFD700, #D4AF37); color: #000; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 30px; }
         button:hover { transform: scale(1.05); }
-        button:disabled { background: #475569; color: #fff; cursor: not-allowed; transform: none; }
-        #keyBox { margin-top: 30px; font-size: 24px; font-weight: bold; color: #FFD700; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 15px; display: none; word-break: break-all; max-width: 400px; }
-        #notice { margin-top: 20px; font-size: 14px; color: #666666; }
-        .already-claimed-box { background: rgba(255, 165, 0, 0.2); border: 2px solid #ffa500; color: #ffa500; padding: 20px; border-radius: 10px; max-width: 450px; display: none; }
-        #keyWarning { color: #ff5555; font-weight: bold; margin-top: 15px; display: none; }
-        
-        /* Black screen anti-bypass overlay */
-        #blackScreen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; color: #fff; display: none;
-            flex-direction: column; justify-content: center; align-items: center;
-            text-align: center; z-index: 9999;
-        }
-        #blackScreen .msg { font-size: 24px; font-weight: bold; max-width: 600px; line-height: 1.6; }
-        #blackScreen .sub { font-size: 16px; color: #aaa; margin-top: 20px; }
-        
-        /* Ctrl+U Trap */
-        #ctrlUTrap {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; color: red; display: none;
-            flex-direction: column; justify-content: center; align-items: center;
-            text-align: center; z-index: 99999;
-        }
-        #ctrlUTrap .bro { font-size: 80px; font-weight: 900; color: #ff0000; text-shadow: 0 0 30px #ff0000; }
-        #ctrlUTrap .warning { font-size: 20px; color: #fff; margin-top: 20px; }
+        #keyBox { margin-top: 30px; font-size: 24px; font-weight: bold; color: #FFD700; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 15px; display: none; word-break: break-all; }
+        #errorBox { display: none; color: red; font-size: 24px; font-weight: bold; margin-top: 30px; }
     </style>
 </head>
 <body>
     <div class="logo">🍪</div>
     <h1>Cookie Snap Key Claim</h1>
-    
-    <!-- Disclaimer -->
-    <div class="disclaimer-box" id="disclaimerBox">
-        ⚠️ <strong>IMPORTANT RULES:</strong>
-        <ul>
-            <li><strong>REFRESHING WITHIN 60 SECONDS IS SAFE.</strong> You can refresh to claim your key.</li>
-            <li><strong>DO NOT REFRESH AFTER 60 SECONDS</strong> if you haven't claimed – you'll be sent back to LootLabs.</li>
-            <li><strong>TIME LIMIT:</strong> You have <strong><span id="timer">2:00</span></strong> to claim your key.</li>
-            <li><strong>AFTER CLAIM:</strong> You have exactly 30 seconds to copy your key before being redirected.</li>
-            <li><strong>KEY VALIDITY:</strong> Key expires in 10 minutes if not activated in the extension.</li>
-        </ul>
-    </div>
-    
-    <p id="mainText">Click the button below to claim your 5-day key.</p>
-    <button id="claimBtn" onclick="claimKey()">Claim Your Key</button>
-    
-    <!-- Already claimed box -->
-    <div class="already-claimed-box" id="alreadyClaimedBox">
-        <p><strong>This device has already used all available keys.</strong></p>
-        <p>To get a new key, you must complete the LootLabs task again.</p>
-        <button onclick="startAgain()">Start System Again (Back to LootLabs)</button>
-    </div>
-    
+    <p id="status">Loading secure token...</p>
+    <button id="claimBtn" onclick="claimKey()" style="display:none;">Claim Your Key</button>
     <div id="keyBox"></div>
-    <p id="notice">You must use this key within 10 minutes.</p>
-    <div id="keyWarning">⚠️ COPY YOUR KEY NOW! DO NOT REFRESH OR YOU WILL LOSE IT!</div>
-
-    <!-- Black Screen Overlay -->
-    <div id="blackScreen">
-        <div class="msg">Just do the verification man its like fifteen minutes and thats what am meant to use to feed please dont make me regret this shit </div>
-        <div class="sub">Please complete the LootLabs task to get a new key.</div>
-    </div>
-
-    <!-- Ctrl+U Trap Overlay -->
-    <div id="ctrlUTrap">
-        <div class="bro">REALLY BRO</div>
-        <div class="warning">I have a ping of your ip fcking scum so maintain i see you fcking retard</div>
-    </div>
+    <div id="errorbox">❌ This claim link has expired.<br>Please go back and complete the task again.</div>
 
     <script>
-        // Disable right-click and Ctrl+U
-        document.addEventListener('context menu', function(e) { e.preventDefault(); });
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) {
-                e.preventDefault();
-                // Show Ctrl+U trap
-                document.getElementById('ctrlUTrap').style.display = 'flex';
-                return false;
-            }
-        });
-
-        // 1. MUST come from LootLabs (contains ?data= verification token)
-        const urlParams = new URLSearchParams(window.location.search);
-        const dataCode = urlParams.get('data');
-
-        if (!dataCode) {
-            // No verification token -> black screen bypass warning, NOT redirect
-            document.getElementById('blackScreen').style.display = 'flex';
-            // (Optional: after a few seconds, redirect to LootLabs)
-            setTimeout(() => { window.location.href = "https://loot-link.com/s?OcqajUzG"; }, 5000);
+        // 1. Generate the one-time token on page load
+        let claimToken = localStorage.getItem('myClaimToken');
+        if (!claimToken) {
+            // First load: generate token
+            fetch('https://cookie-snap-keys.j26064135.workers.dev/generate-token')
+                .then(r => r.json())
+                .then(data => {
+                    claimToken = data.token;
+                    localStorage.setItem('myClaimToken', claimToken);
+                    document.getElementById('status').innerText = "Ready to claim!";
+                    document.getElementById('claimBtn').style.display = 'block';
+                })
+                .catch(() => {
+                    document.getElementById('status').innerText = "Error connecting to server.";
+                });
         } else {
-            // 2. Check if this is a fresh LootLabs completion (new code)
-            let lastDataCode = sessionStorage.getItem('lastDataCode');
-            
-            if (lastDataCode !== dataCode) {
-                // New LootLabs completion! Reset device ID and claimed status to allow new key.
-                localStorage.removeItem('claimed');
-                localStorage.removeItem('deviceId');
-                sessionStorage.setItem('lastDataCode', dataCode);
-                sessionStorage.setItem('pageStartTime', Date.now().toString());
-            } else {
-                // Same code (refresh). Check 60-second rule.
-                let startTime = parseInt(sessionStorage.getItem('pageStartTime')) || 0;
-                let now = Date.now();
-                let elapsed = now - startTime;
-                if (elapsed > 60000) {
-                    // Too late, show black screen anti-bypass
-                    document.getElementById('blackScreen').style.display = 'flex';
-                    setTimeout(() => { window.location.href = "https://loot-link.com/s?OcqajUzG"; }, 5000);
-                }
-            }
-
-            // 3. Check if device already claimed for this code
-            if (localStorage.getItem('claimed') === 'true') {
-                // Show already claimed box
-                document.getElementById('disclaimerBox').style.display = 'none';
-                document.getElementById('mainText').style.display = 'none';
-                document.getElementById('claimBtn').style.display = 'none';
-                document.getElementById('alreadyClaimedBox').style.display = 'block';
-            } else {
-                // Start 2-minute countdown
-                let timeLeft = 120; 
-                const timerElement = document.getElementById('timer');
-                const countdown = setInterval(() => {
-                    if (timeLeft <= 0) {
-                        clearInterval(countdown);
-                        // Time is up -> black screen anti-bypass
-                        document.getElementById('blackScreen').style.display = 'flex';
-                        setTimeout(() => { window.location.href = "https://loot-link.com/s?OcqajUzG"; }, 5000);
-                    }
-                    timeLeft--;
-                    const minutes = Math.floor(timeLeft / 60);
-                    const seconds = timeLeft % 60;
-                    timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-                }, 1000);
-
-                // 4. Device ID
-                if (!localStorage.getItem('deviceId')) {
-                    localStorage.setItem('deviceId', 'DEV-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10));
-                }
-                const deviceId = localStorage.getItem('deviceId');
-
-                // 5. Claim key
-                async function claimKey() {
-                    const btn = document.getElementById('claimBtn');
-                    btn.disabled = true;
-                    btn.textContent = "Claiming...";
-
-                    try {
-                        const response = await fetch(`https://cookie-snap-keys.j26064135.workers.dev/claim?deviceId=${deviceId}&data=${dataCode}`);
-                        const data = await response.json();
-
-                        if (data.success) {
-                            clearInterval(countdown);
-                            localStorage.setItem('claimed', 'true');
-
-                            try {
-                                await navigator.clipboard.writeText(data.key);
-                            } catch (e) {
-                                const textArea = document.createElement('textarea');
-                                textArea.value = data.key;
-                                document.body.appendChild(textArea);
-                                textArea.select();
-                                document.execCommand('copy');
-                                document.body.removeChild(textArea);
-                            }
-
-                            const keyBox = document.getElementById('keyBox');
-                            keyBox.style.display = 'block';
-                            keyBox.innerHTML = `Your Key: <br><br> <span style="font-size:28px;">${data.key}</span><br><br><small>✅ Key copied to clipboard!</small>`;
-                            btn.textContent = "Key Claimed!";
-                            document.getElementById('notice').innerHTML = "Please use this key in the extension.";
-                            document.getElementById('keyWarning').style.display = 'block';
-
-                            setTimeout(function() {
-                                window.location.href = "https://loot-link.com/s?OcqajUzG";
-                            }, 30000);
-                        } else {
-                            if (data.error.includes("already generated")) {
-                                localStorage.setItem('claimed', 'true');
-                                document.getElementById('claimBtn').style.display = 'none';
-                                document.getElementById('alreadyClaimedBox').style.display = 'block';
-                            } else if (data.error.includes("verification failed")) {
-                                alert("LootLabs verification failed. Please go back and complete the ad again.");
-                                document.getElementById('blackScreen').style.display = 'flex';
-                                setTimeout(() => { window.location.href = "https://loot-link.com/s?OcqajUzG"; }, 3000);
-                            } else {
-                                alert("Error: " + (data.error || "Could not claim key"));
-                                btn.disabled = false;
-                                btn.textContent = "Try Again";
-                            }
-                        }
-                    } catch (error) {
-                        alert("Network error: Could not connect to server");
-                        btn.disabled = false;
-                        btn.textContent = "Try Again";
-                    }
-                }
-                window.claimKey = claimKey;
-            }
+            // They refreshed: The token was already deleted from server or not yet used.
+            // We need to check if the token is still valid by trying to claim. Since this is only an HTML file,
+            // We'll just attempt to use the token. If it's used, the server returns an error.
+            document.getElementById('status').innerText = "Ready to claim!";
+            document.getElementById('claimBtn').style.display = 'block';
         }
 
-        function startAgain() {
-            localStorage.removeItem('claimed');
-            localStorage.removeItem('deviceId');
-            sessionStorage.clear();
-            window.location.href = "https://loot-link.com/s?OcqajUzG";
+        // 2. Claim Key function
+        async function claimKey() {
+            const btn = document.getElementById('claimBtn');
+            btn.disabled = true;
+            btn.textContent = "Claiming...";
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataCode = urlParams.get('data');
+
+            try {
+                const response = await fetch(`https://cookie-snap-keys.j26064135.workers.dev/claim?token=${claimToken}&data=${dataCode}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // Success! Attempt to close the page.
+                    document.getElementById('status').innerText = "Key claimed!";
+                    document.getElementById('keyBox').style.display = 'block';
+                    document.getElementById('keyBox').innerHTML = `<strong>Your Key:</strong><br>${data.key}<br><small>Copied to clipboard!</small>`;
+                    
+                    // Attempt to copy
+                    navigator.clipboard.writeText(data.key).catch(() => {});
+
+                    // Attempt to close
+                    setTimeout(() => {
+                        window.close();
+                        // If window.close() is blocked, redirect to a dead-end
+                        setTimeout(() => { window.location.href = "about:blank"; }, 500);
+                    }, 3000); // Give 3 seconds to see the key
+                } else {
+                    // Token already used or invalid!
+                    document.getElementById('status').style.display = 'none';
+                    document.getElementById('claimBtn').style.display = 'none';
+                    document.getElementById('errorBox').style.display = 'block';
+                }
+            } catch (e) {
+                alert("Network error");
+                btn.disabled = false;
+                btn.textContent = "Try Again";
+            }
         }
     </script>
 </body>
