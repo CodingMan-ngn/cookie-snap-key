@@ -89,7 +89,6 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // Success! Delete the local token so it can't be reused
                     localStorage.removeItem('myClaimToken');
 
                     document.getElementById('status').innerText = "Key claimed!";
