@@ -23,28 +23,22 @@
             position: relative;
         }
 
-        /* VORTEX image as background */
         body::before {
             content: "";
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: url('vortex-bg.png') center center / cover no-repeat;
             z-index: -2;
             filter: brightness(0.6) blur(2px);
             transform: scale(1.05);
         }
 
-        /* Dark overlay */
         body::after {
             content: "";
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: rgba(10, 14, 26, 0.7);
             z-index: -1;
         }
@@ -91,7 +85,6 @@
             50% { transform: translateY(-8px); }
         }
 
-        /* Timer Row */
         .timer-row {
             display: flex;
             justify-content: center;
@@ -254,7 +247,6 @@
         <div class="vortex-subtitle">Secure Key Claim</div>
         <div class="key-icon">🔑</div>
 
-        <!-- Timers -->
         <div class="timer-row">
             <div class="timer-box">
                 <div class="timer-label">Key Expires In</div>
@@ -262,7 +254,7 @@
             </div>
             <div class="timer-box">
                 <div class="timer-label">Page Closes In</div>
-                <div class="timer-value" id="pageTimer">1:00</div>
+                <div class="timer-value" id="pageTimer">0:20</div>
             </div>
         </div>
 
@@ -293,10 +285,10 @@
 
         // Timer variables
         const KEY_TIMER_SECONDS = 600; // 10 minutes
-        const PAGE_TIMER_SECONDS = 60; // 1 minute
+        const PAGE_TIMER_SECONDS = 20; // 20 seconds (changed)
         let keyTimerRemaining = KEY_TIMER_SECONDS;
         let pageTimerRemaining = PAGE_TIMER_SECONDS;
-        let pageTimerStarted = false;
+        let keyTimerInterval, pageTimerInterval;
 
         function formatTime(seconds) {
             const mins = Math.floor(seconds / 60);
@@ -315,12 +307,10 @@
                 window.location.href = LOOTLABS_URL;
             }, 2000);
 
-            // The "Get Key" button also redirects immediately
             document.getElementById('getKeyBtn').addEventListener('click', function() {
                 window.location.href = LOOTLABS_URL;
             });
         } else {
-            // Have data param → show claim button after token generation
             document.getElementById('getKeyBtn').style.display = 'none';
             let claimToken = localStorage.getItem('vortexClaimToken');
 
@@ -351,41 +341,30 @@
         }
 
         function startTimers() {
-            // Start key timer (10 min claim window)
-            const keyTimerInterval = setInterval(() => {
+            // Key timer (10 min)
+            keyTimerInterval = setInterval(() => {
                 keyTimerRemaining--;
                 const timerEl = document.getElementById('keyTimer');
                 timerEl.textContent = formatTime(keyTimerRemaining);
-                if (keyTimerRemaining <= 30) {
-                    timerEl.classList.add('warning');
-                }
+                if (keyTimerRemaining <= 30) timerEl.classList.add('warning');
                 if (keyTimerRemaining <= 0) {
                     clearInterval(keyTimerInterval);
-                    timerEl.textContent = '00:00';
-                    timerEl.classList.add('expired');
-                    // Invalidate the key/token
                     localStorage.removeItem('vortexClaimToken');
                     document.getElementById('status').innerText = "Key claim window expired.";
                     document.getElementById('claimBtn').style.display = 'none';
                     document.getElementById('errorBox').innerHTML = "❌ This claim window has expired.<br>Please go back and complete the task again.";
                     document.getElementById('errorBox').style.display = 'block';
-                    // Clear page timer
-                    clearInterval(pageTimerInterval);
                 }
             }, 1000);
 
-            // Start page timer (1 minute auto-close)
-            const pageTimerInterval = setInterval(() => {
+            // Page timer (20 sec) – auto-close
+            pageTimerInterval = setInterval(() => {
                 pageTimerRemaining--;
                 const timerEl = document.getElementById('pageTimer');
                 timerEl.textContent = formatTime(pageTimerRemaining);
-                if (pageTimerRemaining <= 10) {
-                    timerEl.classList.add('warning');
-                }
+                if (pageTimerRemaining <= 5) timerEl.classList.add('warning');
                 if (pageTimerRemaining <= 0) {
                     clearInterval(pageTimerInterval);
-                    timerEl.textContent = '00:00';
-                    // Close the page
                     window.close();
                     setTimeout(() => {
                         history.replaceState(null, '', 'about:blank');
@@ -421,7 +400,7 @@
                 if (data.success) {
                     localStorage.removeItem('vortexClaimToken');
 
-                    // Show success animation
+                    // Success overlay
                     const successOverlay = document.createElement('div');
                     successOverlay.className = 'success-overlay';
                     successOverlay.innerHTML = '<div class="success-text">✅ KEY CLAIMED</div>';
@@ -447,7 +426,7 @@
                     clearInterval(keyTimerInterval);
                     clearInterval(pageTimerInterval);
 
-                    // After 5 seconds, remove key and redirect to about:blank
+                    // After 5 seconds, clear and redirect
                     setTimeout(() => {
                         document.getElementById('keyBox').innerHTML = '';
                         document.getElementById('keyBox').style.display = 'none';
@@ -456,15 +435,15 @@
                         window.location.href = 'about:blank';
                     }, 5000);
 
-                    // Also try to close after 8 seconds
                     setTimeout(() => {
                         window.close();
                     }, 8000);
                 } else {
+                    // If error is "already used", show specific message
                     localStorage.removeItem('vortexClaimToken');
                     statusEl.style.display = 'none';
                     btn.style.display = 'none';
-                    document.getElementById('errorBox').innerHTML = "❌ This claim link has expired.<br>Please go back and complete the task again.";
+                    document.getElementById('errorBox').innerHTML = data.error || "❌ This claim link has expired.";
                     document.getElementById('errorBox').style.display = 'block';
                 }
             } catch (e) {
@@ -473,9 +452,6 @@
                 btn.textContent = "Try Again";
             }
         });
-
-        // Store interval handles globally for cleanup
-        let keyTimerInterval, pageTimerInterval;
     </script>
 </body>
 </html>
