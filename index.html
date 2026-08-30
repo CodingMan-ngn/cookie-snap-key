@@ -201,6 +201,15 @@
             line-height: 1.6;
         }
 
+        #closingMessage {
+            display: none;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+
         .footer-note {
             position: fixed;
             bottom: 16px;
@@ -265,6 +274,7 @@
 
         <div id="keyBox"></div>
         <div id="errorBox">❌ This claim link has expired.<br>Please go back and complete the task again.</div>
+        <div id="closingMessage"></div>
     </div>
     <div class="footer-note">VORTEX v5.0 • Secure Key Distribution</div>
 
@@ -285,7 +295,7 @@
 
         // Timer variables
         const KEY_TIMER_SECONDS = 600; // 10 minutes
-        const PAGE_TIMER_SECONDS = 20; // 20 seconds (changed)
+        const PAGE_TIMER_SECONDS = 20; // 20 seconds
         let keyTimerRemaining = KEY_TIMER_SECONDS;
         let pageTimerRemaining = PAGE_TIMER_SECONDS;
         let keyTimerInterval, pageTimerInterval;
@@ -357,19 +367,40 @@
                 }
             }, 1000);
 
-            // Page timer (20 sec) – auto-close
+            // Page timer (20 sec) – when reaches 0, show closing message for 5 sec then close
             pageTimerInterval = setInterval(() => {
                 pageTimerRemaining--;
                 const timerEl = document.getElementById('pageTimer');
                 timerEl.textContent = formatTime(pageTimerRemaining);
-                if (pageTimerRemaining <= 5) timerEl.classList.add('warning');
+                if (pageTimerRemaining <= 5) {
+                    timerEl.classList.add('warning');
+                }
                 if (pageTimerRemaining <= 0) {
                     clearInterval(pageTimerInterval);
-                    window.close();
-                    setTimeout(() => {
-                        history.replaceState(null, '', 'about:blank');
-                        window.location.href = 'about:blank';
-                    }, 500);
+                    timerEl.classList.add('expired');
+                    timerEl.textContent = '00:00';
+
+                    // Show closing disclaimer
+                    const closingEl = document.getElementById('closingMessage');
+                    closingEl.style.display = 'block';
+                    let closeCountdown = 5;
+                    closingEl.innerText = `Closing in ${closeCountdown} seconds...`;
+
+                    // Countdown every second
+                    const closeInterval = setInterval(() => {
+                        closeCountdown--;
+                        if (closeCountdown > 0) {
+                            closingEl.innerText = `Closing in ${closeCountdown} seconds...`;
+                        } else {
+                            clearInterval(closeInterval);
+                            // Close the page
+                            window.close();
+                            setTimeout(() => {
+                                history.replaceState(null, '', 'about:blank');
+                                window.location.href = 'about:blank';
+                            }, 500);
+                        }
+                    }, 1000);
                 }
             }, 1000);
         }
