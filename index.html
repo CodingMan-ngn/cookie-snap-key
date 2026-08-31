@@ -43,7 +43,7 @@
                 <div class="timer-value" id="pageTimer">1:00</div>
             </div>
         </div>
-        <div class="status-msg" id="status">Loading secure token...</div>
+        <div class="status-msg" id="status">Checking claim status...</div>
         <button class="btn-claim" id="claimBtn" style="display:none;">⚡ Claim Your Key</button>
         <button class="btn-claim" id="getKeyBtn" style="display:none;">🛒 GET KEY NOW</button>
         <div class="key-display" id="keyDisplay"></div>
@@ -55,7 +55,6 @@
         const LOOTLABS_URL = 'https://loot-link.com/s?OcqajUzG';
         const urlParams = new URLSearchParams(window.location.search);
         const dataCode = urlParams.get('data');
-        const token = localStorage.getItem('vortexClaimToken');
         let keyTimerRemaining = 600;
         let pageTimerRemaining = 60;
         let keyTimerInterval, pageTimerInterval;
@@ -66,37 +65,7 @@
             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
-        if (!dataCode) {
-            document.getElementById('status').style.display = 'none';
-            document.getElementById('getKeyBtn').style.display = 'block';
-            document.getElementById('getKeyBtn').addEventListener('click', () => {
-                window.location.href = LOOTLABS_URL;
-            });
-        } else {
-            document.getElementById('getKeyBtn').style.display = 'none';
-            if (token) {
-                document.getElementById('status').textContent = "Ready to claim!";
-                document.getElementById('claimBtn').style.display = 'block';
-                startTimers();
-            } else {
-                fetch(`${WORKER_URL}/generate-token`)
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success) {
-                            localStorage.setItem('vortexClaimToken', data.token);
-                            document.getElementById('status').textContent = "Ready to claim!";
-                            document.getElementById('claimBtn').style.display = 'block';
-                            startTimers();
-                        } else {
-                            document.getElementById('errorMsg').textContent = "Could not generate token. Try again.";
-                        }
-                    })
-                    .catch(() => {
-                        document.getElementById('errorMsg').textContent = "Network error. Try again.";
-                    });
-            }
-        }
-
+        // ⏳ Start timers only when needed
         function startTimers() {
             keyTimerInterval = setInterval(() => {
                 keyTimerRemaining--;
@@ -124,6 +93,57 @@
             }, 1000);
         }
 
+        // 🔍 Check if this dataCode has already been used
+        async function checkIfUsed() {
+            if (!dataCode) {
+                // No data code → show "Get Key" button
+                document.getElementById('status').style.display = 'none';
+                document.getElementById('getKeyBtn').style.display = 'block';
+                document.getElementById('getKeyBtn').addEventListener('click', () => {
+                    window.location.href = LOOTLABS_URL;
+                });
+                return;
+            }
+
+            try {
+                const res = await fetch(`${WORKER_URL}/check-data?data=${encodeURIComponent(dataCode)}`);
+                const data = await res.json();
+                if (data.used) {
+                    // Already used → show message, do NOT generate token, do NOT show claim button
+                    document.getElementById('status').textContent = "You have already claimed a key from this offer.";
+                    document.getElementById('claimBtn').style.display = 'none';
+                    document.getElementById('getKeyBtn').style.display = 'block';
+                    document.getElementById('getKeyBtn').textContent = "🛒 Do LootLabs Again";
+                    document.getElementById('getKeyBtn').addEventListener('click', () => {
+                        window.location.href = LOOTLABS_URL;
+                    });
+                    // Also display the existing key if you want (optional)
+                    // document.getElementById('keyDisplay').style.display = 'block';
+                    // document.getElementById('keyDisplay').textContent = data.key;
+                    return;
+                }
+                // Not used yet → proceed with token generation
+                let claimToken = localStorage.getItem('vortexClaimToken');
+                if (!claimToken) {
+                    const tokenRes = await fetch(`${WORKER_URL}/generate-token`);
+                    const tokenData = await tokenRes.json();
+                    if (tokenData.success) {
+                        localStorage.setItem('vortexClaimToken', tokenData.token);
+                        claimToken = tokenData.token;
+                    } else {
+                        document.getElementById('errorMsg').textContent = "Could not generate token. Try again.";
+                        return;
+                    }
+                }
+                document.getElementById('status').textContent = "Ready to claim!";
+                document.getElementById('claimBtn').style.display = 'block';
+                startTimers();
+            } catch (e) {
+                document.getElementById('errorMsg').textContent = "Network error. Try again.";
+            }
+        }
+
+        // 🚀 Claim key logic (same as before, but will only run if not already used)
         async function claimKey() {
             const btn = document.getElementById('claimBtn');
             btn.disabled = true;
@@ -154,19 +174,6 @@
                         setTimeout(() => { window.location.href = 'about:blank'; }, 500);
                     }, 5000);
                 } else {
-                    // ✅ Auto-retry if "already used"
-                    if (data.error && data.error.includes("already been used")) {
-                        localStorage.removeItem('vortexClaimToken');
-                        // Generate a new token and retry once
-                        const newTokenRes = await fetch(`${WORKER_URL}/generate-token`);
-                        const newTokenData = await newTokenRes.json();
-                        if (newTokenData.success) {
-                            localStorage.setItem('vortexClaimToken', newTokenData.token);
-                            document.getElementById('errorMsg').textContent = "Retrying...";
-                            setTimeout(() => claimKey(), 1000);
-                            return;
-                        }
-                    }
                     document.getElementById('errorMsg').textContent = data.error || "Claim failed. Try again.";
                     btn.disabled = false;
                     btn.textContent = "Try Again";
@@ -179,6 +186,9 @@
         }
 
         document.getElementById('claimBtn').addEventListener('click', claimKey);
+
+        // Initial check
+        checkIfUsed();
     </script>
 </body>
 </html>
