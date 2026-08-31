@@ -10,52 +10,43 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Poppins', sans-serif;
             background: #0a0e1a;
             color: #fff;
-            text-align: center;
             min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             overflow: hidden;
             position: relative;
         }
-
         body::before {
             content: "";
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            inset: 0;
             background: url('vortex-bg.png') center center / cover no-repeat;
-            z-index: -2;
             filter: brightness(0.6) blur(2px);
-            transform: scale(1.05);
+            z-index: -2;
         }
-
         body::after {
             content: "";
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            inset: 0;
             background: rgba(10, 14, 26, 0.7);
             z-index: -1;
         }
-
-        .vortex-container {
-            max-width: 440px;
-            width: 92%;
+        .vortex-card {
+            max-width: 420px;
+            width: 90%;
             background: rgba(26, 35, 58, 0.95);
             border: 1px solid #3b82f6;
             border-radius: 24px;
             padding: 30px 24px;
             box-shadow: 0 0 60px rgba(59, 130, 246, 0.4);
+            text-align: center;
             position: relative;
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
         }
-
         .vortex-logo {
             font-family: 'Orbitron', sans-serif;
             font-size: 26px;
@@ -64,198 +55,57 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 4px;
-            letter-spacing: 3px;
         }
-
-        .vortex-subtitle {
-            font-size: 13px;
-            color: #a3b1c6;
-            margin-bottom: 10px;
-        }
-
-        .key-icon {
-            font-size: 36px;
-            margin-bottom: 10px;
-            color: #ffd700;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-
-        .timer-row {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin: 15px 0;
-        }
-
+        .vortex-subtitle { font-size: 14px; color: #a3b1c6; margin-bottom: 20px; }
+        .timer-row { display: flex; justify-content: center; gap: 12px; margin: 15px 0; }
         .timer-box {
             background: rgba(0, 0, 0, 0.6);
             border: 1px solid #3b82f6;
             border-radius: 12px;
             padding: 10px 14px;
-            min-width: 120px;
             flex: 1;
+            min-width: 120px;
         }
-
-        .timer-label {
-            font-size: 10px;
-            color: #a3b1c6;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-
-        .timer-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 20px;
-            font-weight: 700;
-            color: #60a5fa;
-        }
-
-        .timer-value.warning {
-            color: #ff6b6b;
-            animation: pulse 1s infinite;
-        }
-
-        .timer-value.expired {
-            color: #ff6b6b;
-            animation: pulse 0.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
+        .timer-label { font-size: 10px; color: #a3b1c6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .timer-value { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: #60a5fa; }
+        .timer-value.warning { color: #ff6b6b; animation: pulse 1s infinite; }
         .btn-claim {
             font-family: 'Orbitron', sans-serif;
-            font-size: 15px;
-            font-weight: 700;
+            font-size: 15px; font-weight: 700;
             background: linear-gradient(135deg, #60a5fa, #3b82f6);
             color: #000;
             border: none;
             border-radius: 50px;
             padding: 14px 32px;
             cursor: pointer;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
-            transition: all 0.3s ease;
-            margin-top: 8px;
-            width: 100%;
-        }
-
-        .btn-claim:hover {
-            transform: scale(1.03);
-            box-shadow: 0 6px 30px rgba(59, 130, 246, 0.6);
-        }
-
-        .btn-claim:disabled {
-            background: #64748b;
-            color: #fff;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-get-key {
-            background: linear-gradient(135deg, #ffd700, #ffaa00);
-            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
-        }
-
-        .btn-get-key:hover {
-            box-shadow: 0 6px 30px rgba(255, 215, 0, 0.6);
-        }
-
-        #status {
-            color: #a3b1c6;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-
-        #keyBox {
             margin-top: 20px;
-            font-size: 18px;
-            font-weight: 700;
-            color: #60a5fa;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-claim:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5); }
+        .btn-claim:disabled { opacity: 0.6; cursor: not-allowed; }
+        .key-display {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
             background: rgba(0, 0, 0, 0.6);
-            padding: 18px;
             border-radius: 12px;
             border: 1px solid #3b82f6;
-            display: none;
-            word-break: break-all;
-            max-width: 380px;
             font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            color: #60a5fa;
+            word-break: break-all;
             letter-spacing: 1px;
         }
-
-        #errorBox {
-            display: none;
-            color: #ff6b6b;
-            font-size: 14px;
-            margin-top: 12px;
-            max-width: 600px;
-            line-height: 1.6;
-        }
-
-        #closingMessage {
-            display: none;
-            margin-top: 20px;
-            font-size: 18px;
-            font-weight: 700;
-            color: #ff6b6b;
-            animation: pulse 1s infinite;
-        }
-
-        .footer-note {
-            position: fixed;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 11px;
-            color: #64748b;
-            text-shadow: 0 0 10px rgba(0,0,0,0.5);
-        }
-
-        .success-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            pointer-events: none;
-        }
-
-        .success-text {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 28px;
-            color: #4ade80;
-            animation: glow 1s ease-in-out infinite alternate;
-        }
-
-        @keyframes glow {
-            from { text-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
-            to { text-shadow: 0 0 30px rgba(74, 222, 128, 1); }
-        }
-
-        body {
-            user-select: none;
-            -webkit-user-select: none;
-        }
+        .status-msg { font-size: 13px; margin-top: 12px; color: #a3b1c6; }
+        .error-msg { font-size: 13px; margin-top: 12px; color: #ff6b6b; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
-    <div class="vortex-container" id="mainContainer">
+    <div class="vortex-card">
         <div class="vortex-logo">VORTEX</div>
         <div class="vortex-subtitle">Secure Key Claim</div>
-        <div class="key-icon">🔑</div>
-
         <div class="timer-row">
             <div class="timer-box">
                 <div class="timer-label">Key Expires In</div>
@@ -263,41 +113,24 @@
             </div>
             <div class="timer-box">
                 <div class="timer-label">Page Closes In</div>
-                <div class="timer-value" id="pageTimer">0:20</div>
+                <div class="timer-value" id="pageTimer">1:00</div>
             </div>
         </div>
-
-        <p id="status">Loading secure token...</p>
-
-        <button id="getKeyBtn" class="btn-claim btn-get-key" style="display:none;">🛒 GET KEY NOW</button>
-        <button id="claimBtn" class="btn-claim" style="display:none;">⚡ Claim Your Key</button>
-
-        <div id="keyBox"></div>
-        <div id="errorBox">❌ This claim link has expired.<br>Please go back and complete the task again.</div>
-        <div id="closingMessage"></div>
+        <div class="status-msg" id="status">Loading secure token...</div>
+        <button class="btn-claim" id="claimBtn" style="display:none;">⚡ Claim Your Key</button>
+        <button class="btn-claim" id="getKeyBtn" style="display:none;">🛒 GET KEY NOW</button>
+        <div class="key-display" id="keyDisplay"></div>
+        <div class="error-msg" id="errorMsg"></div>
     </div>
-    <div class="footer-note">VORTEX v5.0 • Secure Key Distribution</div>
 
     <script>
-        // Disable right-click and Ctrl+U/Ctrl+S
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) {
-                e.preventDefault();
-                return false;
-            }
-        });
-
+        const WORKER_URL = 'https://cookie-snap-keys.j26064135.workers.dev';
+        const LOOTLABS_URL = 'https://loot-link.com/s?OcqajUzG';
         const urlParams = new URLSearchParams(window.location.search);
         const dataCode = urlParams.get('data');
-        const LOOTLABS_URL = 'https://loot-link.com/s?OcqajUzG';
-        const WORKER_URL = 'https://cookie-snap-keys.j26064135.workers.dev';
-
-        // Timer variables
-        const KEY_TIMER_SECONDS = 600; // 10 minutes
-        const PAGE_TIMER_SECONDS = 20; // 20 seconds
-        let keyTimerRemaining = KEY_TIMER_SECONDS;
-        let pageTimerRemaining = PAGE_TIMER_SECONDS;
+        const token = localStorage.getItem('vortexClaimToken');
+        let keyTimerRemaining = 600;
+        let pageTimerRemaining = 60;
         let keyTimerInterval, pageTimerInterval;
 
         function formatTime(seconds) {
@@ -306,52 +139,38 @@
             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
-        // If no data param → auto redirect to LootLabs after 2 seconds
         if (!dataCode) {
             document.getElementById('status').style.display = 'none';
-            document.getElementById('claimBtn').style.display = 'none';
             document.getElementById('getKeyBtn').style.display = 'block';
-
-            // Auto-redirect after 2 seconds
-            setTimeout(() => {
-                window.location.href = LOOTLABS_URL;
-            }, 2000);
-
-            document.getElementById('getKeyBtn').addEventListener('click', function() {
+            document.getElementById('getKeyBtn').addEventListener('click', () => {
                 window.location.href = LOOTLABS_URL;
             });
         } else {
             document.getElementById('getKeyBtn').style.display = 'none';
-            let claimToken = localStorage.getItem('vortexClaimToken');
-
-            if (!claimToken) {
+            if (token) {
+                document.getElementById('status').textContent = "Ready to claim!";
+                document.getElementById('claimBtn').style.display = 'block';
+                startTimers();
+            } else {
                 fetch(`${WORKER_URL}/generate-token`)
                     .then(r => r.json())
                     .then(data => {
                         if (data.success) {
-                            claimToken = data.token;
-                            localStorage.setItem('vortexClaimToken', claimToken);
-                            document.getElementById('status').innerText = "Ready to claim!";
+                            localStorage.setItem('vortexClaimToken', data.token);
+                            document.getElementById('status').textContent = "Ready to claim!";
                             document.getElementById('claimBtn').style.display = 'block';
                             startTimers();
                         } else {
-                            throw new Error('Token generation failed');
+                            document.getElementById('errorMsg').textContent = "Could not generate token. Try again.";
                         }
                     })
                     .catch(() => {
-                        document.getElementById('status').innerText = "Error connecting to server.";
-                        document.getElementById('errorBox').innerHTML = "❌ Network error. Please try again.";
-                        document.getElementById('errorBox').style.display = 'block';
+                        document.getElementById('errorMsg').textContent = "Network error. Try again.";
                     });
-            } else {
-                document.getElementById('status').innerText = "Ready to claim!";
-                document.getElementById('claimBtn').style.display = 'block';
-                startTimers();
             }
         }
 
         function startTimers() {
-            // Key timer (10 min)
             keyTimerInterval = setInterval(() => {
                 keyTimerRemaining--;
                 const timerEl = document.getElementById('keyTimer');
@@ -360,125 +179,61 @@
                 if (keyTimerRemaining <= 0) {
                     clearInterval(keyTimerInterval);
                     localStorage.removeItem('vortexClaimToken');
-                    document.getElementById('status').innerText = "Key claim window expired.";
+                    document.getElementById('errorMsg').textContent = "Key claim window expired.";
                     document.getElementById('claimBtn').style.display = 'none';
-                    document.getElementById('errorBox').innerHTML = "❌ This claim window has expired.<br>Please go back and complete the task again.";
-                    document.getElementById('errorBox').style.display = 'block';
                 }
             }, 1000);
 
-            // Page timer (20 sec) – when reaches 0, show closing message for 5 sec then close
             pageTimerInterval = setInterval(() => {
                 pageTimerRemaining--;
                 const timerEl = document.getElementById('pageTimer');
                 timerEl.textContent = formatTime(pageTimerRemaining);
-                if (pageTimerRemaining <= 5) {
-                    timerEl.classList.add('warning');
-                }
+                if (pageTimerRemaining <= 5) timerEl.classList.add('warning');
                 if (pageTimerRemaining <= 0) {
                     clearInterval(pageTimerInterval);
-                    timerEl.classList.add('expired');
-                    timerEl.textContent = '00:00';
-
-                    // Show closing disclaimer
-                    const closingEl = document.getElementById('closingMessage');
-                    closingEl.style.display = 'block';
-                    let closeCountdown = 5;
-                    closingEl.innerText = `Closing in ${closeCountdown} seconds...`;
-
-                    // Countdown every second
-                    const closeInterval = setInterval(() => {
-                        closeCountdown--;
-                        if (closeCountdown > 0) {
-                            closingEl.innerText = `Closing in ${closeCountdown} seconds...`;
-                        } else {
-                            clearInterval(closeInterval);
-                            // Close the page
-                            window.close();
-                            setTimeout(() => {
-                                history.replaceState(null, '', 'about:blank');
-                                window.location.href = 'about:blank';
-                            }, 500);
-                        }
-                    }, 1000);
+                    window.close();
+                    setTimeout(() => { history.replaceState(null, '', 'about:blank'); window.location.href = 'about:blank'; }, 500);
                 }
             }, 1000);
         }
 
-        // Claim button logic
-        document.getElementById('claimBtn').addEventListener('click', async function() {
-            const btn = this;
-            const statusEl = document.getElementById('status');
-
-            if (keyTimerRemaining <= 0) {
-                statusEl.innerText = "Key claim window expired.";
-                return;
-            }
-
+        document.getElementById('claimBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('claimBtn');
             btn.disabled = true;
             btn.textContent = "Claiming...";
-
             let claimToken = localStorage.getItem('vortexClaimToken');
             if (!claimToken) {
-                document.getElementById('errorBox').style.display = 'block';
+                document.getElementById('errorMsg').textContent = "Token missing. Refresh page.";
+                btn.disabled = false;
+                btn.textContent = "Try Again";
                 return;
             }
 
             try {
                 const response = await fetch(`${WORKER_URL}/claim?token=${claimToken}&data=${dataCode}`);
                 const data = await response.json();
-
                 if (data.success) {
                     localStorage.removeItem('vortexClaimToken');
-
-                    // Success overlay
-                    const successOverlay = document.createElement('div');
-                    successOverlay.className = 'success-overlay';
-                    successOverlay.innerHTML = '<div class="success-text">✅ KEY CLAIMED</div>';
-                    document.body.appendChild(successOverlay);
-
-                    statusEl.innerText = "Key claimed!";
-                    btn.style.display = 'none';
-                    document.getElementById('keyBox').style.display = 'block';
-                    document.getElementById('keyBox').innerHTML = `<strong>Your Key:</strong><br><br><span style="font-size:22px;">${data.key}</span><br><br><small>✅ Key copied to clipboard!</small>`;
-
-                    try {
-                        await navigator.clipboard.writeText(data.key);
-                    } catch (e) {
-                        const textArea = document.createElement('textarea');
-                        textArea.value = data.key;
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(textArea);
-                    }
-
-                    // Stop timers
                     clearInterval(keyTimerInterval);
                     clearInterval(pageTimerInterval);
-
-                    // After 5 seconds, clear and redirect
-                    setTimeout(() => {
-                        document.getElementById('keyBox').innerHTML = '';
-                        document.getElementById('keyBox').style.display = 'none';
-                        statusEl.innerText = "Key claimed. Please close this tab.";
-                        history.replaceState(null, '', 'about:blank');
-                        window.location.href = 'about:blank';
-                    }, 5000);
-
+                    document.getElementById('status').textContent = data.alreadyClaimed ? "Key already claimed!" : "Key claimed!";
+                    document.getElementById('claimBtn').style.display = 'none';
+                    const keyDisplay = document.getElementById('keyDisplay');
+                    keyDisplay.style.display = 'block';
+                    keyDisplay.textContent = data.key;
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(data.key).catch(() => {});
                     setTimeout(() => {
                         window.close();
-                    }, 8000);
+                        setTimeout(() => { window.location.href = 'about:blank'; }, 500);
+                    }, 5000);
                 } else {
-                    // If error is "already used", show specific message
-                    localStorage.removeItem('vortexClaimToken');
-                    statusEl.style.display = 'none';
-                    btn.style.display = 'none';
-                    document.getElementById('errorBox').innerHTML = data.error || "❌ This claim link has expired.";
-                    document.getElementById('errorBox').style.display = 'block';
+                    document.getElementById('errorMsg').textContent = data.error || "Claim failed. Try again.";
+                    btn.disabled = false;
+                    btn.textContent = "Try Again";
                 }
             } catch (e) {
-                alert("Network error. Please try again.");
+                document.getElementById('errorMsg').textContent = "Network error. Try again.";
                 btn.disabled = false;
                 btn.textContent = "Try Again";
             }
