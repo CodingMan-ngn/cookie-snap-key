@@ -9,94 +9,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #0a0e1a;
-            color: #fff;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-        body::before {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: url('vortex-bg.png') center center / cover no-repeat;
-            filter: brightness(0.6) blur(2px);
-            z-index: -2;
-        }
-        body::after {
-            content: "";
-            position: fixed;
-            inset: 0;
-            background: rgba(10, 14, 26, 0.7);
-            z-index: -1;
-        }
-        .vortex-card {
-            max-width: 420px;
-            width: 90%;
-            background: rgba(26, 35, 58, 0.95);
-            border: 1px solid #3b82f6;
-            border-radius: 24px;
-            padding: 30px 24px;
-            box-shadow: 0 0 60px rgba(59, 130, 246, 0.4);
-            text-align: center;
-            position: relative;
-            backdrop-filter: blur(10px);
-        }
-        .vortex-logo {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 26px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 4px;
-        }
+        body { font-family: 'Poppins', sans-serif; background: #0a0e1a; color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        body::before { content: ""; position: fixed; inset: 0; background: url('vortex-bg.png') center center / cover no-repeat; filter: brightness(0.6) blur(2px); z-index: -2; }
+        body::after { content: ""; position: fixed; inset: 0; background: rgba(10, 14, 26, 0.7); z-index: -1; }
+        .vortex-card { max-width: 420px; width: 90%; background: rgba(26, 35, 58, 0.95); border: 1px solid #3b82f6; border-radius: 24px; padding: 30px 24px; box-shadow: 0 0 60px rgba(59, 130, 246, 0.4); text-align: center; position: relative; backdrop-filter: blur(10px); }
+        .vortex-logo { font-family: 'Orbitron', sans-serif; font-size: 26px; font-weight: 900; background: linear-gradient(135deg, #60a5fa, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
         .vortex-subtitle { font-size: 14px; color: #a3b1c6; margin-bottom: 20px; }
         .timer-row { display: flex; justify-content: center; gap: 12px; margin: 15px 0; }
-        .timer-box {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #3b82f6;
-            border-radius: 12px;
-            padding: 10px 14px;
-            flex: 1;
-            min-width: 120px;
-        }
+        .timer-box { background: rgba(0, 0, 0, 0.6); border: 1px solid #3b82f6; border-radius: 12px; padding: 10px 14px; flex: 1; min-width: 120px; }
         .timer-label { font-size: 10px; color: #a3b1c6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
         .timer-value { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: #60a5fa; }
         .timer-value.warning { color: #ff6b6b; animation: pulse 1s infinite; }
-        .btn-claim {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 15px; font-weight: 700;
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-            color: #000;
-            border: none;
-            border-radius: 50px;
-            padding: 14px 32px;
-            cursor: pointer;
-            margin-top: 20px;
-            width: 100%;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
+        .btn-claim { font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 700; background: linear-gradient(135deg, #60a5fa, #3b82f6); color: #000; border: none; border-radius: 50px; padding: 14px 32px; cursor: pointer; margin-top: 20px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; }
         .btn-claim:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5); }
         .btn-claim:disabled { opacity: 0.6; cursor: not-allowed; }
-        .key-display {
-            display: none;
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 12px;
-            border: 1px solid #3b82f6;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 18px;
-            color: #60a5fa;
-            word-break: break-all;
-            letter-spacing: 1px;
-        }
+        .key-display { display: none; margin-top: 20px; padding: 15px; background: rgba(0, 0, 0, 0.6); border-radius: 12px; border: 1px solid #3b82f6; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: #60a5fa; word-break: break-all; letter-spacing: 1px; }
         .status-msg { font-size: 13px; margin-top: 12px; color: #a3b1c6; }
         .error-msg { font-size: 13px; margin-top: 12px; color: #ff6b6b; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -197,7 +124,7 @@
             }, 1000);
         }
 
-        document.getElementById('claimBtn').addEventListener('click', async () => {
+        async function claimKey() {
             const btn = document.getElementById('claimBtn');
             btn.disabled = true;
             btn.textContent = "Claiming...";
@@ -221,13 +148,25 @@
                     const keyDisplay = document.getElementById('keyDisplay');
                     keyDisplay.style.display = 'block';
                     keyDisplay.textContent = data.key;
-                    // Copy to clipboard
                     navigator.clipboard.writeText(data.key).catch(() => {});
                     setTimeout(() => {
                         window.close();
                         setTimeout(() => { window.location.href = 'about:blank'; }, 500);
                     }, 5000);
                 } else {
+                    // ✅ Auto-retry if "already used"
+                    if (data.error && data.error.includes("already been used")) {
+                        localStorage.removeItem('vortexClaimToken');
+                        // Generate a new token and retry once
+                        const newTokenRes = await fetch(`${WORKER_URL}/generate-token`);
+                        const newTokenData = await newTokenRes.json();
+                        if (newTokenData.success) {
+                            localStorage.setItem('vortexClaimToken', newTokenData.token);
+                            document.getElementById('errorMsg').textContent = "Retrying...";
+                            setTimeout(() => claimKey(), 1000);
+                            return;
+                        }
+                    }
                     document.getElementById('errorMsg').textContent = data.error || "Claim failed. Try again.";
                     btn.disabled = false;
                     btn.textContent = "Try Again";
@@ -237,7 +176,9 @@
                 btn.disabled = false;
                 btn.textContent = "Try Again";
             }
-        });
+        }
+
+        document.getElementById('claimBtn').addEventListener('click', claimKey);
     </script>
 </body>
 </html>
