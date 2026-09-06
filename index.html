@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VORTEX - Claim Key</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='none' stroke='%2360a5fa' stroke-width='8'/><circle cx='50' cy='50' r='25' fill='%233b82f6'/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -25,43 +26,54 @@
             position: fixed;
             inset: 0;
             background: url('vortex-bg.png') center center / cover no-repeat;
-            filter: brightness(0.6) blur(2px);
+            filter: brightness(0.5) blur(3px);
             z-index: -2;
         }
         body::after {
             content: "";
             position: fixed;
             inset: 0;
-            background: rgba(10, 14, 26, 0.7);
+            background: radial-gradient(circle at 50% 50%, rgba(10,14,26,0.6), rgba(10,14,26,0.9));
             z-index: -1;
         }
         .vortex-card {
             max-width: 420px;
             width: 90%;
-            background: rgba(26, 35, 58, 0.95);
-            border: 1px solid #3b82f6;
+            background: rgba(15, 22, 38, 0.85);
+            border: 1px solid rgba(96, 165, 250, 0.3);
             border-radius: 24px;
             padding: 30px 24px;
-            box-shadow: 0 0 60px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1);
             text-align: center;
             position: relative;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            animation: cardGlow 4s ease-in-out infinite;
+        }
+        .vortex-card.admin-mode {
+            border-color: rgba(34, 197, 94, 0.5);
+            box-shadow: 0 0 40px rgba(34, 197, 94, 0.3), inset 0 0 20px rgba(34, 197, 94, 0.1);
         }
         .vortex-logo {
+            display: inline-block;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.6));
+            cursor: pointer;
+            user-select: none;
+        }
+        .logo-text {
             font-family: 'Orbitron', sans-serif;
-            font-size: 26px;
+            font-size: 32px;
             font-weight: 900;
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
+            background: linear-gradient(135deg, #60a5fa, #3b82f6, #22d3ee);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 4px;
-            cursor: default;
-            user-select: none;
+            letter-spacing: 4px;
         }
         .vortex-subtitle {
             font-size: 14px;
             color: #a3b1c6;
             margin-bottom: 20px;
+            letter-spacing: 1px;
         }
         .timer-row {
             display: flex;
@@ -71,7 +83,7 @@
         }
         .timer-box {
             background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #3b82f6;
+            border: 1px solid rgba(96, 165, 250, 0.3);
             border-radius: 12px;
             padding: 10px 14px;
             flex: 1;
@@ -111,6 +123,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
         }
         .btn-claim:hover {
             transform: translateY(-2px);
@@ -124,6 +137,14 @@
             opacity: 0.8;
             pointer-events: none;
         }
+        .btn-admin {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            margin-top: 8px;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+        .btn-admin:hover {
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+        }
         .key-display {
             display: none;
             margin-top: 20px;
@@ -136,6 +157,7 @@
             color: #60a5fa;
             word-break: break-all;
             letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
         }
         .status-msg {
             font-size: 13px;
@@ -181,12 +203,31 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        @keyframes cardGlow {
+            0%, 100% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1); }
+            50% { box-shadow: 0 0 60px rgba(59, 130, 246, 0.5), inset 0 0 30px rgba(59, 130, 246, 0.2); }
+        }
     </style>
 </head>
 <body>
-    <div class="vortex-card">
-        <div class="vortex-logo" id="vortexLogo">VORTEX</div>
+    <div class="vortex-card" id="vortexCard">
+        <!-- Animated SVG Logo -->
+        <div class="vortex-logo" id="vortexLogo">
+            <svg width="70" height="70" viewBox="0 0 100 100">
+                <defs>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#22d3ee;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <circle cx="50" cy="50" r="40" fill="none" stroke="url(#grad1)" stroke-width="6" stroke-dasharray="10,5" />
+                <circle cx="50" cy="50" r="25" fill="none" stroke="#3b82f6" stroke-width="4" stroke-dasharray="20,5" />
+                <circle cx="50" cy="50" r="10" fill="url(#grad1)" />
+            </svg>
+        </div>
+        <div class="logo-text">VORTEX</div>
         <div class="vortex-subtitle">Secure Key Claim</div>
+
         <div class="timer-row">
             <div class="timer-box">
                 <div class="timer-label">Key Expires In</div>
@@ -197,37 +238,33 @@
                 <div class="timer-value" id="pageTimer">1:00</div>
             </div>
         </div>
+
         <div class="status-msg" id="status">Checking claim status...</div>
         <button class="btn-claim" id="claimBtn" style="display:none;">⚡ Claim Your Key</button>
         <button class="btn-claim" id="getKeyBtn" style="display:none;">🛒 GET KEY NOW</button>
+        <button class="btn-claim btn-admin" id="adminClaimBtn" style="display:none;">🔓 Admin Get Key (1h)</button>
         <div class="key-display" id="keyDisplay"></div>
         <div class="error-msg" id="errorMsg"></div>
+        <div class="status-msg" id="adminStatus"></div>
     </div>
 
     <script>
         // ============================================
-        // DISABLE INSPECT (context menu, F12, shortcuts)
+        // DISABLE INSPECT
         // ============================================
         (function() {
-            // Block right-click
             document.addEventListener('contextmenu', e => e.preventDefault());
-            
-            // Block common DevTools shortcuts
             document.addEventListener('keydown', e => {
                 const key = e.key.toLowerCase();
-                if (
-                    e.key === 'F12' ||
-                    (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(key)) ||
+                if (e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(key)) ||
                     (e.ctrlKey && key === 'u') ||
                     (e.ctrlKey && key === 's') ||
-                    (e.ctrlKey && key === 'p')
-                ) {
+                    (e.ctrlKey && key === 'p')) {
                     e.preventDefault();
                     return false;
                 }
             });
-
-            // Disable text selection on the whole page (optional)
             document.body.addEventListener('selectstart', e => e.preventDefault());
         })();
 
@@ -237,12 +274,13 @@
         const WORKER_URL = 'https://cookie-snap-keys.j26064135.workers.dev';
         const LOOTLABS_URL = 'https://loot-link.com/s?OcqajUzG';  // update if expired
         const FETCH_TIMEOUT = 12000;
-        const ADMIN_SECRET = 'vortex2025'; // change this
+        const ADMIN_SECRET = 'invisible'; // change this
 
         // ============================================
         // STATE
         // ============================================
         let dataCode = new URLSearchParams(window.location.search).get('data');
+        let adminMode = false;
         let keyTimerRemaining = 600;
         let pageTimerRemaining = 60;
         let keyTimerInterval = null;
@@ -279,6 +317,79 @@
         function getErrorMessage(data) {
             return data.error || data.message || data.reason || 'Unknown error';
         }
+
+        // ============================================
+        // ADMIN LOGIN (5 clicks on logo)
+        // ============================================
+        let logoClicks = 0;
+        let logoTimer = null;
+
+        document.getElementById('vortexLogo').addEventListener('click', () => {
+            logoClicks++;
+            if (logoTimer) clearTimeout(logoTimer);
+            logoTimer = setTimeout(() => { logoClicks = 0; }, 1500);
+
+            if (logoClicks >= 5) {
+                logoClicks = 0;
+                adminLogin();
+            }
+        });
+
+        function adminLogin() {
+            const password = prompt('Enter admin password:');
+            if (password === ADMIN_SECRET) {
+                adminMode = true;
+                document.getElementById('vortexCard').classList.add('admin-mode');
+                document.getElementById('adminStatus').textContent = '🟢 Admin Mode Active';
+                document.getElementById('adminClaimBtn').style.display = 'block';
+                document.getElementById('claimBtn').style.display = 'none';
+                document.getElementById('getKeyBtn').style.display = 'none';
+            } else {
+                alert('Wrong password');
+            }
+        }
+
+        // ============================================
+        // ADMIN CLAIM (1 hour)
+        // ============================================
+        async function adminClaim() {
+            if (isClaiming) return;
+            isClaiming = true;
+            const btn = document.getElementById('adminClaimBtn');
+            btn.disabled = true;
+            btn.classList.add('loading');
+            btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+            const newKey = 'ADM-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+            const hours = '1'; // 1 hour expiry
+            const profile = 'Admin';
+
+            try {
+                const url = `${WORKER_URL}/admin?key=${encodeURIComponent(newKey)}&hours=${hours}&pw=${encodeURIComponent(ADMIN_SECRET)}&profile=${encodeURIComponent(profile)}`;
+                const res = await fetchWithTimeout(url);
+                const data = await parseResponse(res);
+
+                if (data.success) {
+                    document.getElementById('status').textContent = 'Admin key created (1 hour)!';
+                    const keyDisplay = document.getElementById('keyDisplay');
+                    keyDisplay.style.display = 'block';
+                    keyDisplay.textContent = newKey;
+                    navigator.clipboard.writeText(newKey).catch(() => {});
+                    document.getElementById('adminStatus').textContent = 'Key valid for 1 hour. Copy now.';
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Network error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('loading');
+                btn.innerHTML = '🔓 Admin Get Key (1h)';
+                isClaiming = false;
+            }
+        }
+
+        document.getElementById('adminClaimBtn').addEventListener('click', adminClaim);
 
         // ============================================
         // TIMERS
@@ -340,42 +451,15 @@
         }
 
         // ============================================
-        // ADMIN BYPASS
-        // ============================================
-        function triggerAdminPopup() {
-            const adminInput = prompt('Enter admin code:');
-            if (adminInput === ADMIN_SECRET) {
-                const manualCode = prompt('Enter data code:');
-                if (manualCode) {
-                    dataCode = manualCode.trim();
-                    document.getElementById('status').textContent = 'Checking claim status...';
-                    checkIfUsed();
-                } else {
-                    showError('No data code entered.');
-                }
-            } else {
-                showError('Invalid admin code.');
-            }
-        }
-
-        let logoClicks = 0, logoTimer = null;
-        document.getElementById('vortexLogo').addEventListener('click', () => {
-            logoClicks++;
-            if (logoTimer) clearTimeout(logoTimer);
-            logoTimer = setTimeout(() => logoClicks = 0, 500);
-            if (logoClicks >= 3) { logoClicks = 0; triggerAdminPopup(); }
-        });
-
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('admin') === ADMIN_SECRET && !dataCode) {
-            setTimeout(() => triggerAdminPopup(), 100);
-        }
-
-        // ============================================
         // MAIN CHECK
         // ============================================
         async function checkIfUsed() {
             clearError();
+
+            if (adminMode) {
+                document.getElementById('adminStatus').textContent = '🟢 Admin Mode Active';
+                return;
+            }
 
             if (!dataCode) {
                 document.getElementById('status').style.display = 'none';
@@ -402,7 +486,6 @@
                     return;
                 }
 
-                // Data code is unused → show claim button
                 document.getElementById('status').textContent = 'Ready to claim!';
                 document.getElementById('claimBtn').style.display = 'block';
                 document.getElementById('getKeyBtn').style.display = 'none';
@@ -428,7 +511,7 @@
         }
 
         // ============================================
-        // CLAIM KEY (NO TOKEN NEEDED)
+        // NORMAL CLAIM
         // ============================================
         async function claimKey() {
             if (isClaiming) return;
@@ -468,7 +551,6 @@
                     }, 5000);
 
                 } else {
-                    // If error says invalid/expired → show GET KEY button
                     if (/expired|invalid|not found/i.test(errMsg)) {
                         showError(errMsg || 'This offer link is expired.');
                         document.getElementById('claimBtn').style.display = 'none';
@@ -506,10 +588,11 @@
             }
         }
 
-        // ============================================
-        // INITIALIZATION
-        // ============================================
         document.getElementById('claimBtn').addEventListener('click', claimKey);
+
+        // ============================================
+        // INITIALIZE
+        // ============================================
         checkIfUsed();
     </script>
 </body>
