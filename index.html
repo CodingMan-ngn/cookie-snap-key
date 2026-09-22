@@ -57,33 +57,21 @@ body::after {
     font-size: 14px; color: #a3b1c6;
     margin-bottom: 16px; letter-spacing: 1px;
 }
-.checkpoints {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin: 0 0 16px;
-}
+.checkpoints { display: flex; justify-content: center; gap: 10px; margin: 0 0 16px; }
 .cp-chip {
-    flex: 1;
-    padding: 10px 12px;
+    flex: 1; padding: 10px 12px;
     border-radius: 12px;
     background: rgba(0,0,0,0.4);
     border: 1px solid rgba(96,165,250,0.2);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #7f8ea3;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1px; color: #7f8ea3;
     transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     gap: 8px;
 }
 .cp-chip .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #3a4050;
-    flex-shrink: 0;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #3a4050; flex-shrink: 0;
 }
 .cp-chip.active {
     border-color: rgba(251,191,36,0.5);
@@ -149,8 +137,7 @@ body::after {
     background: rgba(251, 191, 36, 0.08);
     border: 1px solid rgba(251, 191, 36, 0.35);
     border-radius: 12px;
-    font-size: 12px;
-    line-height: 1.6;
+    font-size: 12px; line-height: 1.6;
     color: #fbbf24;
     text-align: left;
     display: none;
@@ -158,26 +145,14 @@ body::after {
 .disclaimer strong { color: #f59e0b; display: block; margin-bottom: 6px; font-size: 13px; }
 .disclaimer .timer-inline {
     font-family: 'JetBrains Mono', monospace;
-    color: #fff;
-    background: rgba(0,0,0,0.4);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 11px;
+    color: #fff; background: rgba(0,0,0,0.4);
+    padding: 1px 6px; border-radius: 4px; font-size: 11px;
 }
 .status-msg { font-size: 13px; margin-top: 12px; color: #a3b1c6; }
 .error-msg {
     font-size: 13px; margin-top: 12px; color: #ff6b6b;
     min-height: 18px; line-height: 1.4;
 }
-.retry-btn {
-    display: inline-block; margin-top: 10px;
-    background: transparent; border: 1px solid #3b82f6;
-    color: #60a5fa; padding: 6px 18px;
-    border-radius: 50px; cursor: pointer;
-    font-size: 12px; font-weight: 600;
-    transition: background 0.2s;
-}
-.retry-btn:hover { background: rgba(59, 130, 246, 0.15); }
 .spinner {
     display: inline-block; width: 14px; height: 14px;
     border: 2px solid rgba(0, 0, 0, 0.3);
@@ -265,9 +240,8 @@ let keyTimerRemaining = Math.floor(CLAIM_WINDOW_MS / 1000);
 let pageTimerRemaining = Math.floor(PAGE_WINDOW_MS / 1000);
 let isClaiming = false;
 let timersRunning = false;
-let funnelId = localStorage.getItem('vortex_funnel') || '';
+let funnelToken = localStorage.getItem('vortex_funnel') || '';
 
-// anti-tamper
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();
@@ -291,9 +265,9 @@ function formatTime(s) {
     return `${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`;
 }
 
-function workerFetch(url, options = {}) {
+async function workerFetch(url, options = {}) {
     const headers = Object.assign({}, options.headers || {});
-    if (funnelId) headers['X-Funnel'] = funnelId;
+    if (funnelToken) headers['X-Funnel'] = funnelToken;
     return fetch(url, {
         ...options,
         headers,
@@ -330,10 +304,8 @@ function setCheckpoints(cp1Done, cp2Done) {
     const c2 = document.getElementById('cp2');
     const l1 = document.getElementById('cp1-label');
     const l2 = document.getElementById('cp2-label');
-
     c1.classList.remove('active', 'done');
     c2.classList.remove('active', 'done');
-
     if (cp1Done) {
         c1.classList.add('done');
         l1.textContent = 'Checkpoint 1/2 ✓';
@@ -341,7 +313,6 @@ function setCheckpoints(cp1Done, cp2Done) {
         c1.classList.add('active');
         l1.textContent = 'Checkpoint 1/2';
     }
-
     if (cp2Done) {
         c2.classList.add('done');
         l2.textContent = 'Checkpoint 2/2 ✓';
@@ -370,13 +341,13 @@ async function bootstrap() {
     const err = params.get('error');
     if (err) {
         const map = {
-            no_funnel:      'Session missing. Restarting...',
+            no_funnel: 'Session missing. Restarting...',
             funnel_expired: 'Session expired. Restarting...',
             funnel_corrupt: 'Session invalid. Restarting...',
-            skip_detected:  'Complete checkpoint 1 first. Restarting...',
-            too_fast:       'Offer not completed. Try again.',
-            blocked_ua:     'Access denied.',
-            rate_limited:   'Too many attempts. Try again later.'
+            skip_detected: 'Complete checkpoint 1 first. Restarting...',
+            too_fast: 'Offer not completed. Try again.',
+            blocked_ua: 'Access denied.',
+            rate_limited: 'Too many attempts. Try again later.'
         };
         showError(map[err] || 'Restarting...');
         window.history.replaceState(null, '', '/');
@@ -405,8 +376,8 @@ async function bootstrap() {
         const data = await parseResponse(res);
 
         if (data.funnel) {
-            funnelId = data.funnel;
-            localStorage.setItem('vortex_funnel', funnelId);
+            funnelToken = data.funnel;
+            localStorage.setItem('vortex_funnel', funnelToken);
         }
 
         if (!data.success) {
@@ -493,16 +464,18 @@ async function claimKey() {
     clearError();
 
     try {
+        // 1. mint session
         const sRes = await fetchWithTimeout(`${WORKER_URL}/session`);
         const sData = await parseResponse(sRes);
-        if (!sData.session) {
-            showError(sData.error || 'Session failed.');
+        if (!sData.success || !sData.session) {
+            showError(sData.error || 'session_failed');
             btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
             isClaiming = false;
             return;
         }
         session = sData.session;
 
+        // 2. claim
         const res = await fetchWithTimeout(`${WORKER_URL}/claim`, {
             method: 'POST',
             headers: { 'X-Session': session, 'Content-Type': 'application/json' },
@@ -525,7 +498,6 @@ async function claimKey() {
             document.getElementById('disclaimer').style.display = 'block';
             if (navigator.clipboard) navigator.clipboard.writeText(data.key).catch(() => {});
 
-            // clear stored funnel after successful claim
             localStorage.removeItem('vortex_funnel');
 
             setTimeout(() => {
@@ -535,10 +507,10 @@ async function claimKey() {
             return;
         }
 
-        showError(data.error || 'Claim failed.');
+        showError(data.error || data.details || 'Claim failed.');
         btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
     } catch (err) {
-        showError('Network error.');
+        showError('Network error: ' + (err.message || 'unknown'));
         btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
     } finally {
         isClaiming = false;
@@ -546,7 +518,7 @@ async function claimKey() {
 }
 document.getElementById('claimBtn').addEventListener('click', claimKey);
 
-// Admin — 5 clicks on logo
+// admin — 5 clicks on logo
 let logoClicks = 0, logoTimer = null;
 document.getElementById('vortexLogo').addEventListener('click', () => {
     logoClicks++;
@@ -558,7 +530,6 @@ document.getElementById('vortexLogo').addEventListener('click', () => {
 async function adminLogin() {
     const pw = prompt('Admin token:');
     if (!pw) return;
-    // verify by hitting /admin with a test key
     try {
         const testKey = 'VX-TEST' + Math.random().toString(36).substring(2,6).toUpperCase();
         const url = `${WORKER_URL}/admin?key=${encodeURIComponent(testKey)}&hours=1&pw=${encodeURIComponent(pw)}&profile=AdminTest`;
