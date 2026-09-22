@@ -114,10 +114,7 @@ body::after {
     text-align: left;
     display: none;
 }
-.disclaimer strong {
-    color: #f59e0b; display: block;
-    margin-bottom: 6px; font-size: 13px;
-}
+.disclaimer strong { color: #f59e0b; display: block; margin-bottom: 6px; font-size: 13px; }
 .disclaimer .timer-inline {
     font-family: 'JetBrains Mono', monospace;
     color: #fff;
@@ -184,8 +181,8 @@ body::after {
     </div>
 
     <div class="status-msg" id="status">Loading...</div>
-    <button class="btn-claim" id="claimBtn" style="display:none;">⚡ Claim Your Key</button>
-    <button class="btn-claim" id="startBtn" style="display:none;">▶ Start Verification</button>
+    <button class="btn-claim" id="getKeyBtn" style="display:none;">🛒 Get Key</button>
+    <button class="btn-claim" id="claimBtn" style="display:none;">⚡ Generate Key</button>
     <button class="btn-claim btn-admin" id="adminClaimBtn" style="display:none;">🔓 Admin Get Key</button>
     <div class="key-display" id="keyDisplay"></div>
     <div class="disclaimer" id="disclaimer">
@@ -203,10 +200,11 @@ body::after {
 'use strict';
 
 // ============================================
-// CONFIG — hardcoded, your real endpoints
+// CONFIG
 // ============================================
 const WORKER_URL = 'https://cookie-snap-keys.j26064135.workers.dev';
-const START_URL  = WORKER_URL + '/start';
+const STAGE1_URL = 'https://boostylink.com/Skz7KGEB';
+const STAGE2_URL = 'https://boostylink.com/Skz7KGEB';
 
 const FETCH_TIMEOUT   = 12000;
 const CLAIM_WINDOW_MS = 600000;
@@ -215,18 +213,16 @@ const PAGE_WINDOW_MS  = 60000;
 // ============================================
 // STATE
 // ============================================
-const params   = new URLSearchParams(window.location.search);
-const dataCode = params.get('data') || '';
-const urlError = params.get('error') || '';
+const params = new URLSearchParams(window.location.search);
+let funnelState = null;
 let session = null;
-let tier = null;
-let issuedAt = 0;
 let adminMode = false;
 let keyTimerInterval = null;
 let pageTimerInterval = null;
 let keyTimerRemaining = Math.floor(CLAIM_WINDOW_MS / 1000);
 let pageTimerRemaining = Math.floor(PAGE_WINDOW_MS / 1000);
 let isClaiming = false;
+let timersRunning = false;
 
 // ============================================
 // ANTI-TAMPER
@@ -251,16 +247,16 @@ try {
 // ============================================
 // UTILS
 // ============================================
-function formatTime(seconds) {
-    if (seconds < 0) seconds = 0;
-    const m = Math.floor(seconds / 60), s = seconds % 60;
-    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+function formatTime(s) {
+    if (s < 0) s = 0;
+    const m = Math.floor(s / 60), x = s % 60;
+    return `${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`;
 }
 async function fetchWithTimeout(url, options = {}) {
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
     try {
-        const r = await fetch(url, { ...options, signal: ctrl.signal, credentials: 'omit', cache: 'no-store' });
+        const r = await fetch(url, { ...options, signal: ctrl.signal, credentials: 'include', cache: 'no-store' });
         clearTimeout(id);
         return r;
     } catch (err) { clearTimeout(id); throw err; }
@@ -268,21 +264,9 @@ async function fetchWithTimeout(url, options = {}) {
 async function parseResponse(res) {
     try { return await res.json(); } catch { return { error: `Server ${res.status}` }; }
 }
-function getErrorMessage(d) { return d.error || d.message || d.reason || 'Unknown error'; }
-function showError(message, showRetry = false) {
-    const errEl = document.getElementById('errorMsg');
-    errEl.textContent = message;
-    if (showRetry) {
-        const retry = document.createElement('button');
-        retry.className = 'retry-btn';
-        retry.textContent = 'Retry';
-        retry.onclick = () => { errEl.innerHTML = ''; bootstrap(); };
-        errEl.appendChild(document.createElement('br'));
-        errEl.appendChild(retry);
-    }
-}
+function setStatus(t) { document.getElementById('status').textContent = t; }
 function clearError() { document.getElementById('errorMsg').textContent = ''; }
-function setStatus(text) { document.getElementById('status').textContent = text; }
+function showError(msg) { document.getElementById('errorMsg').textContent = msg; }
 
 // ============================================
 // BOOTSTRAP
@@ -290,96 +274,130 @@ function setStatus(text) { document.getElementById('status').textContent = text;
 async function bootstrap() {
     clearError();
     document.getElementById('claimBtn').style.display = 'none';
-    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('getKeyBtn').style.display = 'none';
     document.getElementById('adminClaimBtn').style.display = 'none';
     document.getElementById('keyDisplay').style.display = 'none';
-    document.getElementById('keyDisplay').textContent = '';
     document.getElementById('disclaimer').style.display = 'none';
 
     if (adminMode) { setStatus('Admin mode active.'); return; }
 
-    if (urlError) {
-        const msgs = {
-            no_funnel:      'Verification flow missing. Starting over...',
-            funnel_expired: 'Session expired. Starting over...',
-            funnel_corrupt: 'Session invalid. Starting over...',
-            skip_detected:  'Please complete step 1 first. Restarting...'
+    // handle error params from redirect
+    const err = params.get('error');
+    if (err) {
+        const map = {
+            no_funnel: 'Session missing. Restarting...',
+            funnel_expired: 'Session expired. Restarting...',
+            funnel_corrupt: 'Session invalid. Restarting...',
+            skip_detected: 'Complete step 1 first. Restarting...'
         };
-        setStatus(msgs[urlError] || 'Error. Restarting...');
-        setTimeout(() => { window.location.href = START_URL; }, 1500);
+        setStatus(map[err] || 'Error. Restarting...');
+        history.replaceState(null, '', '/');
+        setTimeout(() => bootstrap(), 1500);
         return;
     }
 
-    if (!dataCode) {
-        setStatus('Starting verification...');
-        setTimeout(() => { window.location.href = START_URL; }, 800);
+    // step 2 marker — auto redirect to stage 2 after 2s
+    if (params.get('step') === '2') {
+        setStatus('Step 1 complete. Starting step 2...');
+        document.getElementById('getKeyBtn').style.display = 'flex';
+        document.getElementById('getKeyBtn').textContent = '▶ Step 2';
+        document.getElementById('getKeyBtn').onclick = () => {
+            window.location.href = WORKER_URL + '/funnel-goto?stage=2';
+        };
+        setTimeout(() => {
+            window.location.href = WORKER_URL + '/funnel-goto?stage=2';
+        }, 2000);
         return;
     }
 
-    setStatus('Establishing secure session...');
+    // fetch funnel state
     try {
-        const res = await fetchWithTimeout(`${WORKER_URL}/session?data=${encodeURIComponent(dataCode)}`);
+        const res = await fetchWithTimeout(`${WORKER_URL}/funnel`);
         const data = await parseResponse(res);
 
-        if (!res.ok || !data.session) {
-            setStatus('This link is no longer valid.');
-            const sb = document.getElementById('startBtn');
-            sb.style.display = 'flex';
-            sb.textContent = '▶ Start over';
-            sb.onclick = () => { window.location.href = START_URL; };
-            if (data.error) showError(data.error);
+        if (!data.success) {
+            showError(data.error || 'Session error.');
+            showStartButton();
             return;
         }
 
-        session = data.session;
-        tier = data.tier || 'full';
-        issuedAt = data.issuedAt || Date.now();
+        funnelState = data;
 
-        startPageTimer();
-        startKeyTimer();
-        setStatus('Ready to claim.');
-        document.getElementById('claimBtn').style.display = 'flex';
+        // verified marker or already both gates done
+        if (params.get('verified') === '1' || (data.gate1Done && data.gate2Done && data.dataCode)) {
+            // ready to claim
+            setStatus('Verification complete. Generate your key.');
+            document.getElementById('claimBtn').style.display = 'flex';
+            startTimers();
+            return;
+        }
+
+        // gate1 done, need gate2
+        if (data.gate1Done && !data.gate2Done) {
+            setStatus('Step 1 complete. Starting step 2...');
+            document.getElementById('getKeyBtn').style.display = 'flex';
+            document.getElementById('getKeyBtn').textContent = '▶ Step 2';
+            document.getElementById('getKeyBtn').onclick = () => {
+                window.location.href = WORKER_URL + '/funnel-goto?stage=2';
+            };
+            setTimeout(() => {
+                window.location.href = WORKER_URL + '/funnel-goto?stage=2';
+            }, 2000);
+            return;
+        }
+
+        // no gates done yet — show GET KEY button that starts stage 1
+        setStatus('Complete verification to get your key.');
+        document.getElementById('getKeyBtn').style.display = 'flex';
+        document.getElementById('getKeyBtn').textContent = '🛒 Get Key';
+        document.getElementById('getKeyBtn').onclick = () => {
+            window.location.href = WORKER_URL + '/funnel-goto?stage=1';
+        };
     } catch (err) {
-        if (err.name === 'AbortError') showError('Request timed out.', true);
-        else showError('Connection failed.', true);
-        const sb = document.getElementById('startBtn');
-        sb.style.display = 'flex';
-        sb.textContent = '▶ Start over';
-        sb.onclick = () => { window.location.href = START_URL; };
+        showError('Connection failed.');
+        showStartButton();
     }
+}
+
+function showStartButton() {
+    const b = document.getElementById('getKeyBtn');
+    b.style.display = 'flex';
+    b.textContent = '🛒 Get Key';
+    b.onclick = () => { window.location.href = WORKER_URL + '/funnel-goto?stage=1'; };
 }
 
 // ============================================
 // TIMERS
 // ============================================
-function startKeyTimer() {
+function startTimers() {
+    if (timersRunning) return;
+    timersRunning = true;
+
     if (keyTimerInterval) clearInterval(keyTimerInterval);
-    const el = document.getElementById('keyTimer');
-    el.textContent = formatTime(keyTimerRemaining);
+    if (pageTimerInterval) clearInterval(pageTimerInterval);
+
+    const kEl = document.getElementById('keyTimer');
+    const pEl = document.getElementById('pageTimer');
+    kEl.textContent = formatTime(keyTimerRemaining);
+    pEl.textContent = formatTime(pageTimerRemaining);
+
     keyTimerInterval = setInterval(() => {
         keyTimerRemaining--;
-        el.textContent = formatTime(keyTimerRemaining);
-        if (keyTimerRemaining <= 30) el.classList.add('warning');
+        kEl.textContent = formatTime(keyTimerRemaining);
+        if (keyTimerRemaining <= 30) kEl.classList.add('warning');
         if (keyTimerRemaining <= 0) {
             clearInterval(keyTimerInterval); keyTimerInterval = null;
             showError('Claim window expired.');
             setStatus('Offer expired.');
             document.getElementById('claimBtn').style.display = 'none';
-            const sb = document.getElementById('startBtn');
-            sb.style.display = 'flex';
-            sb.textContent = '▶ Start over';
-            sb.onclick = () => { window.location.href = START_URL; };
+            showStartButton();
         }
     }, 1000);
-}
-function startPageTimer() {
-    if (pageTimerInterval) clearInterval(pageTimerInterval);
-    const el = document.getElementById('pageTimer');
-    el.textContent = formatTime(pageTimerRemaining);
+
     pageTimerInterval = setInterval(() => {
         pageTimerRemaining--;
-        el.textContent = formatTime(pageTimerRemaining);
-        if (pageTimerRemaining <= 5) el.classList.add('warning');
+        pEl.textContent = formatTime(pageTimerRemaining);
+        if (pageTimerRemaining <= 5) pEl.classList.add('warning');
         if (pageTimerRemaining <= 0) {
             clearInterval(pageTimerInterval); pageTimerInterval = null;
             try { window.close(); } catch (e) {}
@@ -391,30 +409,38 @@ function startPageTimer() {
 // ============================================
 // CLAIM
 // ============================================
-async function claim() {
+async function claimKey() {
     if (isClaiming) return;
     isClaiming = true;
     const btn = document.getElementById('claimBtn');
     const original = btn.innerHTML;
     btn.disabled = true; btn.classList.add('loading');
-    btn.innerHTML = '<span class="spinner"></span> Claiming...';
+    btn.innerHTML = '<span class="spinner"></span> Generating...';
     clearError();
 
     try {
+        // mint a session first
+        const sRes = await fetchWithTimeout(`${WORKER_URL}/session`);
+        const sData = await parseResponse(sRes);
+        if (!sData.session) {
+            showError(sData.error || 'Session failed.');
+            btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
+            isClaiming = false;
+            return;
+        }
+        session = sData.session;
+
         const res = await fetchWithTimeout(`${WORKER_URL}/claim`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Session': session || ''
-            },
-            body: JSON.stringify({ data: dataCode })
+            headers: { 'X-Session': session, 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
         });
         const data = await parseResponse(res);
-        const errMsg = getErrorMessage(data);
 
         if (data.success && data.key) {
             if (keyTimerInterval)  clearInterval(keyTimerInterval);
             if (pageTimerInterval) clearInterval(pageTimerInterval);
+            timersRunning = false;
 
             setStatus(data.alreadyClaimed ? 'Key already claimed.' : 'Key claimed.');
             btn.style.display = 'none';
@@ -434,31 +460,16 @@ async function claim() {
             return;
         }
 
-        if (/expired|invalid|not found|used/i.test(errMsg)) {
-            showError(errMsg || 'Link expired or already used.');
-            btn.style.display = 'none';
-            const sb = document.getElementById('startBtn');
-            sb.style.display = 'flex';
-            sb.textContent = '▶ Start over';
-            sb.onclick = () => { window.location.href = START_URL; };
-        } else if (/session/i.test(errMsg)) {
-            showError('Session invalid. Reloading…');
-            setTimeout(bootstrap, 1500);
-        } else {
-            showError(errMsg || 'Claim failed.');
-            btn.disabled = false; btn.classList.remove('loading');
-            btn.innerHTML = original;
-        }
+        showError(data.error || 'Claim failed.');
+        btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
     } catch (err) {
-        if (err.name === 'AbortError') showError('Request timed out.');
-        else showError('Network error.');
-        btn.disabled = false; btn.classList.remove('loading');
-        btn.innerHTML = original;
+        showError('Network error.');
+        btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
     } finally {
         isClaiming = false;
     }
 }
-document.getElementById('claimBtn').addEventListener('click', claim);
+document.getElementById('claimBtn').addEventListener('click', claimKey);
 
 // ============================================
 // ADMIN (5 clicks on logo)
@@ -470,22 +481,25 @@ document.getElementById('vortexLogo').addEventListener('click', () => {
     logoTimer = setTimeout(() => { logoClicks = 0; }, 1500);
     if (logoClicks >= 5) { logoClicks = 0; adminLogin(); }
 });
+
 async function sha256Hex(str) {
     const buf = new TextEncoder().encode(str);
     const hash = await crypto.subtle.digest('SHA-256', buf);
     return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,'0')).join('');
 }
+
 async function adminLogin() {
     const pw = prompt('Admin token:');
     if (!pw) return;
-    adminLogin._hash = await sha256Hex(pw);
+    adminLogin._pw = pw;
     adminMode = true;
     document.getElementById('vortexCard').classList.add('admin-mode');
     document.getElementById('adminStatus').textContent = '🟢 Admin mode active.';
     document.getElementById('adminClaimBtn').style.display = 'flex';
     document.getElementById('claimBtn').style.display = 'none';
-    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('getKeyBtn').style.display = 'none';
 }
+
 async function adminClaim() {
     if (isClaiming) return;
     isClaiming = true;
@@ -493,25 +507,24 @@ async function adminClaim() {
     const original = btn.innerHTML;
     btn.disabled = true; btn.classList.add('loading');
     btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+    const newKey = 'ADM-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+
     try {
-        const res = await fetchWithTimeout(`${WORKER_URL}/admin`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Session': session || '',
-                'X-Admin-Hash': adminLogin._hash || ''
-            },
-            body: JSON.stringify({ hours: 48, profile: 'Admin' })
-        });
+        const url = `${WORKER_URL}/admin?key=${encodeURIComponent(newKey)}&hours=48&pw=${encodeURIComponent(adminLogin._pw || '')}&profile=Admin`;
+        const res = await fetchWithTimeout(url);
         const data = await parseResponse(res);
-        if (data.success && data.key) {
+
+        if (data.success) {
             setStatus('Admin key created.');
             const kd = document.getElementById('keyDisplay');
             kd.style.display = 'block';
-            kd.textContent = data.key;
+            kd.textContent = newKey;
             document.getElementById('disclaimer').style.display = 'block';
-            if (navigator.clipboard) navigator.clipboard.writeText(data.key).catch(() => {});
-        } else showError(data.error || 'Admin error.');
+            if (navigator.clipboard) navigator.clipboard.writeText(newKey).catch(() => {});
+        } else {
+            showError(data.error || 'Admin error.');
+        }
     } catch { showError('Network error.'); }
     finally {
         btn.disabled = false; btn.classList.remove('loading');
