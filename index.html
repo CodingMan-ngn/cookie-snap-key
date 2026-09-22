@@ -203,20 +203,19 @@ body::after {
 'use strict';
 
 // ============================================
-// CONFIG — your deployed worker
+// CONFIG — hardcoded, your real endpoints
 // ============================================
 const WORKER_URL = 'https://cookie-snap-keys.j26064135.workers.dev';
 const START_URL  = WORKER_URL + '/start';
-const CLAIM_URL  = 'https://cookie-snap-key.pages.dev/';
 
-const FETCH_TIMEOUT = 12000;
+const FETCH_TIMEOUT   = 12000;
 const CLAIM_WINDOW_MS = 600000;
 const PAGE_WINDOW_MS  = 60000;
 
 // ============================================
 // STATE
 // ============================================
-const params = new URLSearchParams(window.location.search);
+const params   = new URLSearchParams(window.location.search);
 const dataCode = params.get('data') || '';
 const urlError = params.get('error') || '';
 let session = null;
@@ -299,20 +298,18 @@ async function bootstrap() {
 
     if (adminMode) { setStatus('Admin mode active.'); return; }
 
-    // error from a broken gate redirect
     if (urlError) {
         const msgs = {
-            no_funnel: 'Verification flow missing. Starting over...',
+            no_funnel:      'Verification flow missing. Starting over...',
             funnel_expired: 'Session expired. Starting over...',
             funnel_corrupt: 'Session invalid. Starting over...',
-            skip_detected: 'Please complete step 1 first. Restarting...'
+            skip_detected:  'Please complete step 1 first. Restarting...'
         };
         setStatus(msgs[urlError] || 'Error. Restarting...');
         setTimeout(() => { window.location.href = START_URL; }, 1500);
         return;
     }
 
-    // no data code → auto-kick the funnel
     if (!dataCode) {
         setStatus('Starting verification...');
         setTimeout(() => { window.location.href = START_URL; }, 800);
