@@ -128,4 +128,405 @@ body::after {
 }
 .status-msg { font-size: 13px; margin-top: 12px; color: #a3b1c6; }
 .error-msg {
-    font-size:
+    font-size: 13px; margin-top: 12px; color: #ff6b6b;
+    min-height: 18px; line-height: 1.4;
+}
+.retry-btn {
+    display: inline-block; margin-top: 10px;
+    background: transparent; border: 1px solid #3b82f6;
+    color: #60a5fa; padding: 6px 18px;
+    border-radius: 50px; cursor: pointer;
+    font-size: 12px; font-weight: 600;
+    transition: background 0.2s;
+}
+.retry-btn:hover { background: rgba(59, 130, 246, 0.15); }
+.spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-top-color: #000; border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes cardGlow {
+    0%,100% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1); }
+    50% { box-shadow: 0 0 60px rgba(59, 130, 246, 0.5), inset 0 0 30px rgba(59, 130, 246, 0.2); }
+}
+</style>
+</head>
+<body>
+<div class="vortex-card" id="vortexCard">
+    <div class="vortex-logo" id="vortexLogo">
+        <svg width="70" height="70" viewBox="0 0 100 100">
+            <defs>
+                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#60a5fa" stop-opacity="1" />
+                    <stop offset="100%" stop-color="#22d3ee" stop-opacity="1" />
+                </linearGradient>
+            </defs>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="url(#grad1)" stroke-width="6" stroke-dasharray="10,5" />
+            <circle cx="50" cy="50" r="25" fill="none" stroke="#3b82f6" stroke-width="4" stroke-dasharray="20,5" />
+            <circle cx="50" cy="50" r="10" fill="url(#grad1)" />
+        </svg>
+    </div>
+    <div class="logo-text">VORTEX</div>
+    <div class="vortex-subtitle">Secure Key Claim</div>
+
+    <div class="timer-row">
+        <div class="timer-box">
+            <div class="timer-label">Key Expires In</div>
+            <div class="timer-value" id="keyTimer">10:00</div>
+        </div>
+        <div class="timer-box">
+            <div class="timer-label">Page Closes In</div>
+            <div class="timer-value" id="pageTimer">1:00</div>
+        </div>
+    </div>
+
+    <div class="status-msg" id="status">Checking claim status...</div>
+    <button class="btn-claim" id="claimBtn" style="display:none;">⚡ Claim Your Key</button>
+    <button class="btn-claim" id="getKeyBtn" style="display:none;">🛒 GET KEY NOW</button>
+    <button class="btn-claim btn-admin" id="adminClaimBtn" style="display:none;">🔓 Admin Get Key</button>
+    <div class="key-display" id="keyDisplay"></div>
+    <div class="disclaimer" id="disclaimer">
+        <strong>⚠️ Key lasts 2 days</strong>
+        Valid for <span class="timer-inline">2 days (48 hours)</span> from activation.<br>
+        Activate within <span class="timer-inline">10 minutes</span> of claiming or it expires.<br>
+        Not recoverable if lost. Copy now.
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+    <div class="status-msg" id="adminStatus"></div>
+</div>
+
+<script>
+(function() {
+'use strict';
+
+// ============================================
+// CONFIG
+// ============================================
+const WORKER_URL = 'https://boostylink.com/dashboard';
+const BOOSTY_URL = 'https://boostylink.com/dashboard';
+const FETCH_TIMEOUT = 12000;
+const CLAIM_WINDOW_MS = 600000;
+const PAGE_WINDOW_MS  = 60000;
+
+// ============================================
+// STATE
+// ============================================
+const dataCode = new URLSearchParams(window.location.search).get('data') || '';
+let session = null;
+let tier = null;
+let issuedAt = 0;
+let adminMode = false;
+let keyTimerInterval = null;
+let pageTimerInterval = null;
+let keyTimerRemaining = Math.floor(CLAIM_WINDOW_MS / 1000);
+let pageTimerRemaining = Math.floor(PAGE_WINDOW_MS / 1000);
+let isClaiming = false;
+
+// ============================================
+// ANTI-TAMPER
+// ============================================
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    const key = e.key.toLowerCase();
+    if (e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(key)) ||
+        (e.ctrlKey && ['u','s','p'].includes(key))) {
+        e.preventDefault(); return false;
+    }
+});
+document.addEventListener('selectstart', e => e.preventDefault());
+document.addEventListener('dragstart', e => e.preventDefault());
+
+try {
+    if (window.top !== window.self) window.top.location = window.self.location;
+    if (window.opener) window.opener = null;
+} catch (e) {}
+
+// ============================================
+// UTILS
+// ============================================
+function formatTime(seconds) {
+    if (seconds < 0) seconds = 0;
+    const m = Math.floor(seconds / 60), s = seconds % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+async function fetchWithTimeout(url, options = {}) {
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
+    try {
+        const r = await fetch(url, { ...options, signal: ctrl.signal, credentials: 'omit', cache: 'no-store' });
+        clearTimeout(id);
+        return r;
+    } catch (err) { clearTimeout(id); throw err; }
+}
+
+async function parseResponse(res) {
+    try { return await res.json(); }
+    catch (e) { return { error: `Server returned ${res.status}` }; }
+}
+
+function getErrorMessage(d) {
+    return d.error || d.message || d.reason || 'Unknown error';
+}
+
+function showError(message, showRetry = false) {
+    const errEl = document.getElementById('errorMsg');
+    errEl.textContent = message;
+    if (showRetry) {
+        const retry = document.createElement('button');
+        retry.className = 'retry-btn';
+        retry.textContent = 'Retry';
+        retry.onclick = () => { errEl.innerHTML = ''; bootstrap(); };
+        errEl.appendChild(document.createElement('br'));
+        errEl.appendChild(retry);
+    }
+}
+function clearError() { document.getElementById('errorMsg').textContent = ''; }
+function setStatus(text) { document.getElementById('status').textContent = text; }
+
+// ============================================
+// BOOTSTRAP
+// ============================================
+async function bootstrap() {
+    clearError();
+    document.getElementById('claimBtn').style.display = 'none';
+    document.getElementById('getKeyBtn').style.display = 'none';
+    document.getElementById('adminClaimBtn').style.display = 'none';
+    document.getElementById('keyDisplay').style.display = 'none';
+    document.getElementById('keyDisplay').textContent = '';
+    document.getElementById('disclaimer').style.display = 'none';
+
+    if (adminMode) { setStatus('Admin mode active.'); return; }
+
+    if (!dataCode) {
+        setStatus('No key code. Redirecting...');
+        setTimeout(() => { window.location.href = BOOSTY_URL; }, 1200);
+        return;
+    }
+
+    setStatus('Establishing secure session...');
+    try {
+        const res = await fetchWithTimeout(`${WORKER_URL}/session?data=${encodeURIComponent(dataCode)}`);
+        const data = await parseResponse(res);
+
+        if (!res.ok || !data.session) {
+            setStatus('This offer link is no longer valid.');
+            const g = document.getElementById('getKeyBtn');
+            g.style.display = 'block';
+            g.textContent = '🛒 Get a new key';
+            g.onclick = () => { window.location.href = BOOSTY_URL; };
+            if (data.error) showError(data.error);
+            return;
+        }
+
+        session = data.session;
+        tier = data.tier || 'full';
+        issuedAt = data.issuedAt || Date.now();
+
+        startPageTimer();
+        setStatus('Ready to claim.');
+        document.getElementById('claimBtn').style.display = 'flex';
+        startKeyTimer();
+    } catch (err) {
+        if (err.name === 'AbortError') showError('Request timed out.', true);
+        else showError('Connection failed.', true);
+        const g = document.getElementById('getKeyBtn');
+        g.style.display = 'block';
+        g.textContent = '🛒 Get key';
+        g.onclick = () => { window.location.href = BOOSTY_URL; };
+    }
+}
+
+// ============================================
+// TIMERS
+// ============================================
+function startKeyTimer() {
+    if (keyTimerInterval) clearInterval(keyTimerInterval);
+    const el = document.getElementById('keyTimer');
+    el.textContent = formatTime(keyTimerRemaining);
+    keyTimerInterval = setInterval(() => {
+        keyTimerRemaining--;
+        el.textContent = formatTime(keyTimerRemaining);
+        if (keyTimerRemaining <= 30) el.classList.add('warning');
+        if (keyTimerRemaining <= 0) {
+            clearInterval(keyTimerInterval); keyTimerInterval = null;
+            showError('Claim window expired.');
+            setStatus('Offer expired.');
+            document.getElementById('claimBtn').style.display = 'none';
+            const g = document.getElementById('getKeyBtn');
+            g.style.display = 'block';
+            g.onclick = () => { window.location.href = BOOSTY_URL; };
+        }
+    }, 1000);
+}
+
+function startPageTimer() {
+    if (pageTimerInterval) clearInterval(pageTimerInterval);
+    const el = document.getElementById('pageTimer');
+    el.textContent = formatTime(pageTimerRemaining);
+    pageTimerInterval = setInterval(() => {
+        pageTimerRemaining--;
+        el.textContent = formatTime(pageTimerRemaining);
+        if (pageTimerRemaining <= 5) el.classList.add('warning');
+        if (pageTimerRemaining <= 0) {
+            clearInterval(pageTimerInterval); pageTimerInterval = null;
+            try { window.close(); } catch (e) {}
+            setTimeout(() => { window.location.replace('about:blank'); }, 400);
+        }
+    }, 1000);
+}
+
+// ============================================
+// CLAIM
+// ============================================
+async function claim() {
+    if (isClaiming) return;
+    isClaiming = true;
+    const btn = document.getElementById('claimBtn');
+    const original = btn.innerHTML;
+    btn.disabled = true; btn.classList.add('loading');
+    btn.innerHTML = '<span class="spinner"></span> Claiming...';
+    clearError();
+
+    try {
+        const res = await fetchWithTimeout(`${WORKER_URL}/claim`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session': session || ''
+            },
+            body: JSON.stringify({ data: dataCode })
+        });
+        const data = await parseResponse(res);
+        const errMsg = getErrorMessage(data);
+
+        if (data.success && data.key) {
+            if (keyTimerInterval)  clearInterval(keyTimerInterval);
+            if (pageTimerInterval) clearInterval(pageTimerInterval);
+
+            setStatus(data.alreadyClaimed ? 'Key already claimed.' : 'Key claimed.');
+            btn.style.display = 'none';
+
+            const kd = document.getElementById('keyDisplay');
+            kd.style.display = 'block';
+            kd.textContent = data.key;
+
+            document.getElementById('disclaimer').style.display = 'block';
+
+            if (navigator.clipboard) navigator.clipboard.writeText(data.key).catch(() => {});
+
+            setTimeout(() => {
+                try { window.close(); } catch (e) {}
+                setTimeout(() => { window.location.replace('about:blank'); }, 400);
+            }, 15000);
+            return;
+        }
+
+        if (/expired|invalid|not found|used/i.test(errMsg)) {
+            showError(errMsg || 'Link expired or already used.');
+            btn.style.display = 'none';
+            const g = document.getElementById('getKeyBtn');
+            g.style.display = 'block';
+            g.textContent = '🛒 Get a new key';
+            g.onclick = () => { window.location.href = BOOSTY_URL; };
+        } else if (/session/i.test(errMsg)) {
+            showError('Session invalid. Reloading…');
+            setTimeout(bootstrap, 1500);
+        } else {
+            showError(errMsg || 'Claim failed.');
+            btn.disabled = false; btn.classList.remove('loading');
+            btn.innerHTML = original;
+        }
+    } catch (err) {
+        if (err.name === 'AbortError') showError('Request timed out.');
+        else showError('Network error.');
+        btn.disabled = false; btn.classList.remove('loading');
+        btn.innerHTML = original;
+    } finally {
+        isClaiming = false;
+    }
+}
+
+document.getElementById('claimBtn').addEventListener('click', claim);
+
+// ============================================
+// ADMIN (5 clicks on logo)
+// ============================================
+let logoClicks = 0, logoTimer = null;
+document.getElementById('vortexLogo').addEventListener('click', () => {
+    logoClicks++;
+    if (logoTimer) clearTimeout(logoTimer);
+    logoTimer = setTimeout(() => { logoClicks = 0; }, 1500);
+    if (logoClicks >= 5) { logoClicks = 0; adminLogin(); }
+});
+
+async function sha256Hex(str) {
+    const buf = new TextEncoder().encode(str);
+    const hash = await crypto.subtle.digest('SHA-256', buf);
+    return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function adminLogin() {
+    const pw = prompt('Admin token:');
+    if (!pw) return;
+    const hash = await sha256Hex(pw);
+    adminLogin._hash = hash;
+    adminMode = true;
+    document.getElementById('vortexCard').classList.add('admin-mode');
+    document.getElementById('adminStatus').textContent = '🟢 Admin mode active.';
+    document.getElementById('adminClaimBtn').style.display = 'flex';
+    document.getElementById('claimBtn').style.display = 'none';
+    document.getElementById('getKeyBtn').style.display = 'none';
+}
+
+async function adminClaim() {
+    if (isClaiming) return;
+    isClaiming = true;
+    const btn = document.getElementById('adminClaimBtn');
+    const original = btn.innerHTML;
+    btn.disabled = true; btn.classList.add('loading');
+    btn.innerHTML = '<span class="spinner"></span> Generating...';
+
+    try {
+        const res = await fetchWithTimeout(`${WORKER_URL}/admin`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Session': session || '',
+                'X-Admin-Hash': adminLogin._hash || ''
+            },
+            body: JSON.stringify({ hours: 48, profile: 'Admin' })
+        });
+        const data = await parseResponse(res);
+        if (data.success && data.key) {
+            setStatus('Admin key created.');
+            const kd = document.getElementById('keyDisplay');
+            kd.style.display = 'block';
+            kd.textContent = data.key;
+            document.getElementById('disclaimer').style.display = 'block';
+            if (navigator.clipboard) navigator.clipboard.writeText(data.key).catch(() => {});
+        } else {
+            showError(data.error || 'Admin error.');
+        }
+    } catch (err) {
+        showError('Network error.');
+    } finally {
+        btn.disabled = false; btn.classList.remove('loading');
+        btn.innerHTML = original;
+        isClaiming = false;
+    }
+}
+document.getElementById('adminClaimBtn').addEventListener('click', adminClaim);
+
+// ============================================
+// INIT
+// ============================================
+bootstrap();
+})();
+</script>
+</body>
+</html>
