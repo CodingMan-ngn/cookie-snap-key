@@ -203,10 +203,10 @@ body::after {
 'use strict';
 
 // ============================================
-// CONFIG
+// CONFIG — set to your deployed worker URL
 // ============================================
-const WORKER_URL = 'https://boostylink.com/dashboard';
-const BOOSTY_URL = 'https://boostylink.com/dashboard';
+const WORKER_URL  = 'https://YOUR-WORKER.workers.dev';
+const START_URL   = WORKER_URL + '/start';
 const FETCH_TIMEOUT = 12000;
 const CLAIM_WINDOW_MS = 600000;
 const PAGE_WINDOW_MS  = 60000;
@@ -253,7 +253,6 @@ function formatTime(seconds) {
     const m = Math.floor(seconds / 60), s = seconds % 60;
     return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
-
 async function fetchWithTimeout(url, options = {}) {
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
@@ -263,15 +262,10 @@ async function fetchWithTimeout(url, options = {}) {
         return r;
     } catch (err) { clearTimeout(id); throw err; }
 }
-
 async function parseResponse(res) {
-    try { return await res.json(); }
-    catch (e) { return { error: `Server returned ${res.status}` }; }
+    try { return await res.json(); } catch { return { error: `Server ${res.status}` }; }
 }
-
-function getErrorMessage(d) {
-    return d.error || d.message || d.reason || 'Unknown error';
-}
+function getErrorMessage(d) { return d.error || d.message || d.reason || 'Unknown error'; }
 
 function showError(message, showRetry = false) {
     const errEl = document.getElementById('errorMsg');
@@ -302,9 +296,12 @@ async function bootstrap() {
 
     if (adminMode) { setStatus('Admin mode active.'); return; }
 
+    // no data code → user landed directly. send to worker /start to kick the funnel.
     if (!dataCode) {
-        setStatus('No key code. Redirecting...');
-        setTimeout(() => { window.location.href = BOOSTY_URL; }, 1200);
+        setStatus('No key code — starting funnel...');
+        document.getElementById('getKeyBtn').style.display = 'flex';
+        document.getElementById('getKeyBtn').textContent = '▶ Start';
+        document.getElementById('getKeyBtn').onclick = () => { window.location.href = START_URL; };
         return;
     }
 
@@ -316,9 +313,9 @@ async function bootstrap() {
         if (!res.ok || !data.session) {
             setStatus('This offer link is no longer valid.');
             const g = document.getElementById('getKeyBtn');
-            g.style.display = 'block';
-            g.textContent = '🛒 Get a new key';
-            g.onclick = () => { window.location.href = BOOSTY_URL; };
+            g.style.display = 'flex';
+            g.textContent = '▶ Start over';
+            g.onclick = () => { window.location.href = START_URL; };
             if (data.error) showError(data.error);
             return;
         }
@@ -328,16 +325,16 @@ async function bootstrap() {
         issuedAt = data.issuedAt || Date.now();
 
         startPageTimer();
+        startKeyTimer();
         setStatus('Ready to claim.');
         document.getElementById('claimBtn').style.display = 'flex';
-        startKeyTimer();
     } catch (err) {
         if (err.name === 'AbortError') showError('Request timed out.', true);
         else showError('Connection failed.', true);
         const g = document.getElementById('getKeyBtn');
-        g.style.display = 'block';
-        g.textContent = '🛒 Get key';
-        g.onclick = () => { window.location.href = BOOSTY_URL; };
+        g.style.display = 'flex';
+        g.textContent = '▶ Start over';
+        g.onclick = () => { window.location.href = START_URL; };
     }
 }
 
@@ -358,12 +355,12 @@ function startKeyTimer() {
             setStatus('Offer expired.');
             document.getElementById('claimBtn').style.display = 'none';
             const g = document.getElementById('getKeyBtn');
-            g.style.display = 'block';
-            g.onclick = () => { window.location.href = BOOSTY_URL; };
+            g.style.display = 'flex';
+            g.textContent = '▶ Start over';
+            g.onclick = () => { window.location.href = START_URL; };
         }
     }, 1000);
 }
-
 function startPageTimer() {
     if (pageTimerInterval) clearInterval(pageTimerInterval);
     const el = document.getElementById('pageTimer');
@@ -430,9 +427,9 @@ async function claim() {
             showError(errMsg || 'Link expired or already used.');
             btn.style.display = 'none';
             const g = document.getElementById('getKeyBtn');
-            g.style.display = 'block';
-            g.textContent = '🛒 Get a new key';
-            g.onclick = () => { window.location.href = BOOSTY_URL; };
+            g.style.display = 'flex';
+            g.textContent = '▶ Start over';
+            g.onclick = () => { window.location.href = START_URL; };
         } else if (/session/i.test(errMsg)) {
             showError('Session invalid. Reloading…');
             setTimeout(bootstrap, 1500);
@@ -450,7 +447,6 @@ async function claim() {
         isClaiming = false;
     }
 }
-
 document.getElementById('claimBtn').addEventListener('click', claim);
 
 // ============================================
@@ -463,18 +459,15 @@ document.getElementById('vortexLogo').addEventListener('click', () => {
     logoTimer = setTimeout(() => { logoClicks = 0; }, 1500);
     if (logoClicks >= 5) { logoClicks = 0; adminLogin(); }
 });
-
 async function sha256Hex(str) {
     const buf = new TextEncoder().encode(str);
     const hash = await crypto.subtle.digest('SHA-256', buf);
     return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,'0')).join('');
 }
-
 async function adminLogin() {
     const pw = prompt('Admin token:');
     if (!pw) return;
-    const hash = await sha256Hex(pw);
-    adminLogin._hash = hash;
+    adminLogin._hash = await sha256Hex(pw);
     adminMode = true;
     document.getElementById('vortexCard').classList.add('admin-mode');
     document.getElementById('adminStatus').textContent = '🟢 Admin mode active.';
@@ -482,7 +475,6 @@ async function adminLogin() {
     document.getElementById('claimBtn').style.display = 'none';
     document.getElementById('getKeyBtn').style.display = 'none';
 }
-
 async function adminClaim() {
     if (isClaiming) return;
     isClaiming = true;
@@ -490,7 +482,6 @@ async function adminClaim() {
     const original = btn.innerHTML;
     btn.disabled = true; btn.classList.add('loading');
     btn.innerHTML = '<span class="spinner"></span> Generating...';
-
     try {
         const res = await fetchWithTimeout(`${WORKER_URL}/admin`, {
             method: 'POST',
@@ -509,12 +500,9 @@ async function adminClaim() {
             kd.textContent = data.key;
             document.getElementById('disclaimer').style.display = 'block';
             if (navigator.clipboard) navigator.clipboard.writeText(data.key).catch(() => {});
-        } else {
-            showError(data.error || 'Admin error.');
-        }
-    } catch (err) {
-        showError('Network error.');
-    } finally {
+        } else showError(data.error || 'Admin error.');
+    } catch { showError('Network error.'); }
+    finally {
         btn.disabled = false; btn.classList.remove('loading');
         btn.innerHTML = original;
         isClaiming = false;
@@ -522,9 +510,6 @@ async function adminClaim() {
 }
 document.getElementById('adminClaimBtn').addEventListener('click', adminClaim);
 
-// ============================================
-// INIT
-// ============================================
 bootstrap();
 })();
 </script>
