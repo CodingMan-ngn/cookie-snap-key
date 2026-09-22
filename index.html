@@ -55,9 +55,50 @@ body::after {
 }
 .vortex-subtitle {
     font-size: 14px; color: #a3b1c6;
-    margin-bottom: 20px; letter-spacing: 1px;
+    margin-bottom: 16px; letter-spacing: 1px;
 }
-.timer-row { display: flex; justify-content: center; gap: 12px; margin: 15px 0; }
+.checkpoints {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 0 0 16px;
+}
+.cp-chip {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(96,165,250,0.2);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #7f8ea3;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.cp-chip .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #3a4050;
+    flex-shrink: 0;
+}
+.cp-chip.active {
+    border-color: rgba(251,191,36,0.5);
+    color: #fbbf24;
+    background: rgba(251,191,36,0.08);
+}
+.cp-chip.active .dot { background: #fbbf24; animation: pulse 1.2s infinite; }
+.cp-chip.done {
+    border-color: rgba(34,197,94,0.5);
+    color: #22c55e;
+    background: rgba(34,197,94,0.08);
+}
+.cp-chip.done .dot { background: #22c55e; }
+
+.timer-row { display: flex; justify-content: center; gap: 12px; margin: 12px 0; }
 .timer-box {
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(96, 165, 250, 0.3);
@@ -80,7 +121,7 @@ body::after {
     background: linear-gradient(135deg, #60a5fa, #3b82f6);
     color: #000; border: none; border-radius: 50px;
     padding: 14px 32px; cursor: pointer;
-    margin-top: 20px; width: 100%;
+    margin-top: 16px; width: 100%;
     transition: transform 0.2s, box-shadow 0.2s;
     display: flex; align-items: center; justify-content: center;
     gap: 8px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
@@ -144,7 +185,7 @@ body::after {
     animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 @keyframes cardGlow {
     0%,100% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1); }
     50% { box-shadow: 0 0 60px rgba(59, 130, 246, 0.5), inset 0 0 30px rgba(59, 130, 246, 0.2); }
@@ -169,6 +210,17 @@ body::after {
     <div class="logo-text">VORTEX</div>
     <div class="vortex-subtitle">Secure Key Claim</div>
 
+    <div class="checkpoints">
+        <div class="cp-chip" id="cp1">
+            <span class="dot"></span>
+            <span id="cp1-label">Checkpoint 1/2</span>
+        </div>
+        <div class="cp-chip" id="cp2">
+            <span class="dot"></span>
+            <span id="cp2-label">Checkpoint 2/2</span>
+        </div>
+    </div>
+
     <div class="timer-row">
         <div class="timer-box">
             <div class="timer-label">Key Expires In</div>
@@ -188,7 +240,7 @@ body::after {
     <div class="disclaimer" id="disclaimer">
         <strong>⚠️ Key lasts 2 days</strong>
         Valid for <span class="timer-inline">2 days (48 hours)</span> from activation.<br>
-        Activate within <span class="timer-inline">10 minutes</span> of claiming or it expires.<br>
+        Activate within <span class="timer-inline">10 minutes</span> of generating or it expires.<br>
         Not recoverable if lost. Copy now.
     </div>
     <div class="error-msg" id="errorMsg"></div>
@@ -199,22 +251,12 @@ body::after {
 (function() {
 'use strict';
 
-// ============================================
-// CONFIG
-// ============================================
 const WORKER_URL = 'https://cookie-snap-keys.j26064135.workers.dev';
-const STAGE1_URL = 'https://boostylink.com/Skz7KGEB';
-const STAGE2_URL = 'https://boostylink.com/Skz7KGEB';
-
 const FETCH_TIMEOUT   = 12000;
 const CLAIM_WINDOW_MS = 600000;
 const PAGE_WINDOW_MS  = 60000;
 
-// ============================================
-// STATE
-// ============================================
 const params = new URLSearchParams(window.location.search);
-let funnelState = null;
 let session = null;
 let adminMode = false;
 let keyTimerInterval = null;
@@ -223,10 +265,9 @@ let keyTimerRemaining = Math.floor(CLAIM_WINDOW_MS / 1000);
 let pageTimerRemaining = Math.floor(PAGE_WINDOW_MS / 1000);
 let isClaiming = false;
 let timersRunning = false;
+let funnelId = localStorage.getItem('vortex_funnel') || '';
 
-// ============================================
-// ANTI-TAMPER
-// ============================================
+// anti-tamper
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();
@@ -244,131 +285,168 @@ try {
     if (window.opener) window.opener = null;
 } catch (e) {}
 
-// ============================================
-// UTILS
-// ============================================
 function formatTime(s) {
     if (s < 0) s = 0;
     const m = Math.floor(s / 60), x = s % 60;
     return `${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`;
 }
+
+function workerFetch(url, options = {}) {
+    const headers = Object.assign({}, options.headers || {});
+    if (funnelId) headers['X-Funnel'] = funnelId;
+    return fetch(url, {
+        ...options,
+        headers,
+        credentials: 'include',
+        cache: 'no-store'
+    });
+}
+
 async function fetchWithTimeout(url, options = {}) {
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
     try {
-        const r = await fetch(url, { ...options, signal: ctrl.signal, credentials: 'include', cache: 'no-store' });
+        const r = await workerFetch(url, { ...options, signal: ctrl.signal });
         clearTimeout(id);
         return r;
     } catch (err) { clearTimeout(id); throw err; }
 }
+
 async function parseResponse(res) {
     try { return await res.json(); } catch { return { error: `Server ${res.status}` }; }
 }
+
 function setStatus(t) { document.getElementById('status').textContent = t; }
 function clearError() { document.getElementById('errorMsg').textContent = ''; }
 function showError(msg) { document.getElementById('errorMsg').textContent = msg; }
+function hideButtons() {
+    ['claimBtn', 'getKeyBtn', 'adminClaimBtn'].forEach(id => {
+        document.getElementById(id).style.display = 'none';
+    });
+}
 
-// ============================================
-// BOOTSTRAP
-// ============================================
+function setCheckpoints(cp1Done, cp2Done) {
+    const c1 = document.getElementById('cp1');
+    const c2 = document.getElementById('cp2');
+    const l1 = document.getElementById('cp1-label');
+    const l2 = document.getElementById('cp2-label');
+
+    c1.classList.remove('active', 'done');
+    c2.classList.remove('active', 'done');
+
+    if (cp1Done) {
+        c1.classList.add('done');
+        l1.textContent = 'Checkpoint 1/2 ✓';
+    } else {
+        c1.classList.add('active');
+        l1.textContent = 'Checkpoint 1/2';
+    }
+
+    if (cp2Done) {
+        c2.classList.add('done');
+        l2.textContent = 'Checkpoint 2/2 ✓';
+    } else if (cp1Done) {
+        c2.classList.add('active');
+        l2.textContent = 'Checkpoint 2/2';
+    } else {
+        l2.textContent = 'Checkpoint 2/2';
+    }
+}
+
+function goToOffer() {
+    window.location.href = WORKER_URL + '/funnel-goto';
+}
+
 async function bootstrap() {
     clearError();
-    document.getElementById('claimBtn').style.display = 'none';
-    document.getElementById('getKeyBtn').style.display = 'none';
-    document.getElementById('adminClaimBtn').style.display = 'none';
+    hideButtons();
     document.getElementById('keyDisplay').style.display = 'none';
+    document.getElementById('keyDisplay').textContent = '';
     document.getElementById('disclaimer').style.display = 'none';
+    setCheckpoints(false, false);
 
     if (adminMode) { setStatus('Admin mode active.'); return; }
 
-    // handle error params from redirect
     const err = params.get('error');
     if (err) {
         const map = {
-            no_funnel: 'Session missing. Restarting...',
+            no_funnel:      'Session missing. Restarting...',
             funnel_expired: 'Session expired. Restarting...',
             funnel_corrupt: 'Session invalid. Restarting...',
-            skip_detected: 'Complete step 1 first. Restarting...'
+            skip_detected:  'Complete checkpoint 1 first. Restarting...',
+            too_fast:       'Offer not completed. Try again.',
+            blocked_ua:     'Access denied.',
+            rate_limited:   'Too many attempts. Try again later.'
         };
-        setStatus(map[err] || 'Error. Restarting...');
-        history.replaceState(null, '', '/');
+        showError(map[err] || 'Restarting...');
+        window.history.replaceState(null, '', '/');
         setTimeout(() => bootstrap(), 1500);
         return;
     }
 
-    // step 2 marker — auto redirect to stage 2 after 2s
     if (params.get('step') === '2') {
-        setStatus('Step 1 complete. Starting step 2...');
-        document.getElementById('getKeyBtn').style.display = 'flex';
-        document.getElementById('getKeyBtn').textContent = '▶ Step 2';
-        document.getElementById('getKeyBtn').onclick = () => {
-            window.location.href = WORKER_URL + '/funnel-goto?stage=2';
-        };
-        setTimeout(() => {
-            window.location.href = WORKER_URL + '/funnel-goto?stage=2';
-        }, 2000);
+        setCheckpoints(true, false);
+        setStatus('Checkpoint 1/2 complete. Starting checkpoint 2/2...');
+        const b = document.getElementById('getKeyBtn');
+        b.style.display = 'flex';
+        b.textContent = '▶ Start Checkpoint 2/2';
+        b.onclick = goToOffer;
+        setTimeout(goToOffer, 2000);
         return;
     }
 
-    // fetch funnel state
+    if (params.toString()) {
+        setTimeout(() => window.history.replaceState(null, '', '/'), 300);
+    }
+
+    setStatus('Loading...');
     try {
         const res = await fetchWithTimeout(`${WORKER_URL}/funnel`);
         const data = await parseResponse(res);
 
+        if (data.funnel) {
+            funnelId = data.funnel;
+            localStorage.setItem('vortex_funnel', funnelId);
+        }
+
         if (!data.success) {
             showError(data.error || 'Session error.');
-            showStartButton();
+            showGetKeyButton('🛒 Get Key');
             return;
         }
 
-        funnelState = data;
-
-        // verified marker or already both gates done
-        if (params.get('verified') === '1' || (data.gate1Done && data.gate2Done && data.dataCode)) {
-            // ready to claim
-            setStatus('Verification complete. Generate your key.');
+        if (data.gate1Done && data.gate2Done && data.dataCode) {
+            setCheckpoints(true, true);
+            setStatus('All checkpoints complete. Generate your key.');
             document.getElementById('claimBtn').style.display = 'flex';
             startTimers();
             return;
         }
 
-        // gate1 done, need gate2
         if (data.gate1Done && !data.gate2Done) {
-            setStatus('Step 1 complete. Starting step 2...');
-            document.getElementById('getKeyBtn').style.display = 'flex';
-            document.getElementById('getKeyBtn').textContent = '▶ Step 2';
-            document.getElementById('getKeyBtn').onclick = () => {
-                window.location.href = WORKER_URL + '/funnel-goto?stage=2';
-            };
-            setTimeout(() => {
-                window.location.href = WORKER_URL + '/funnel-goto?stage=2';
-            }, 2000);
+            setCheckpoints(true, false);
+            setStatus('Checkpoint 1/2 complete. Starting checkpoint 2/2...');
+            showGetKeyButton('▶ Start Checkpoint 2/2');
+            setTimeout(goToOffer, 2000);
             return;
         }
 
-        // no gates done yet — show GET KEY button that starts stage 1
-        setStatus('Complete verification to get your key.');
-        document.getElementById('getKeyBtn').style.display = 'flex';
-        document.getElementById('getKeyBtn').textContent = '🛒 Get Key';
-        document.getElementById('getKeyBtn').onclick = () => {
-            window.location.href = WORKER_URL + '/funnel-goto?stage=1';
-        };
+        setCheckpoints(false, false);
+        setStatus('Complete checkpoint 1/2 to continue.');
+        showGetKeyButton('🛒 Start Checkpoint 1/2');
     } catch (err) {
-        showError('Connection failed.');
-        showStartButton();
+        showError('Connection failed — retrying in 2s...');
+        setTimeout(() => bootstrap(), 2000);
     }
 }
 
-function showStartButton() {
+function showGetKeyButton(label) {
     const b = document.getElementById('getKeyBtn');
     b.style.display = 'flex';
-    b.textContent = '🛒 Get Key';
-    b.onclick = () => { window.location.href = WORKER_URL + '/funnel-goto?stage=1'; };
+    b.textContent = label || '🛒 Get Key';
+    b.onclick = goToOffer;
 }
 
-// ============================================
-// TIMERS
-// ============================================
 function startTimers() {
     if (timersRunning) return;
     timersRunning = true;
@@ -388,9 +466,8 @@ function startTimers() {
         if (keyTimerRemaining <= 0) {
             clearInterval(keyTimerInterval); keyTimerInterval = null;
             showError('Claim window expired.');
-            setStatus('Offer expired.');
-            document.getElementById('claimBtn').style.display = 'none';
-            showStartButton();
+            hideButtons();
+            showGetKeyButton('🛒 Start over');
         }
     }, 1000);
 
@@ -406,9 +483,6 @@ function startTimers() {
     }, 1000);
 }
 
-// ============================================
-// CLAIM
-// ============================================
 async function claimKey() {
     if (isClaiming) return;
     isClaiming = true;
@@ -419,7 +493,6 @@ async function claimKey() {
     clearError();
 
     try {
-        // mint a session first
         const sRes = await fetchWithTimeout(`${WORKER_URL}/session`);
         const sData = await parseResponse(sRes);
         if (!sData.session) {
@@ -442,16 +515,18 @@ async function claimKey() {
             if (pageTimerInterval) clearInterval(pageTimerInterval);
             timersRunning = false;
 
-            setStatus(data.alreadyClaimed ? 'Key already claimed.' : 'Key claimed.');
-            btn.style.display = 'none';
+            setStatus(data.alreadyClaimed ? 'Key already claimed.' : 'Key generated.');
+            hideButtons();
 
             const kd = document.getElementById('keyDisplay');
             kd.style.display = 'block';
             kd.textContent = data.key;
 
             document.getElementById('disclaimer').style.display = 'block';
-
             if (navigator.clipboard) navigator.clipboard.writeText(data.key).catch(() => {});
+
+            // clear stored funnel after successful claim
+            localStorage.removeItem('vortex_funnel');
 
             setTimeout(() => {
                 try { window.close(); } catch (e) {}
@@ -471,9 +546,7 @@ async function claimKey() {
 }
 document.getElementById('claimBtn').addEventListener('click', claimKey);
 
-// ============================================
-// ADMIN (5 clicks on logo)
-// ============================================
+// Admin — 5 clicks on logo
 let logoClicks = 0, logoTimer = null;
 document.getElementById('vortexLogo').addEventListener('click', () => {
     logoClicks++;
@@ -482,22 +555,30 @@ document.getElementById('vortexLogo').addEventListener('click', () => {
     if (logoClicks >= 5) { logoClicks = 0; adminLogin(); }
 });
 
-async function sha256Hex(str) {
-    const buf = new TextEncoder().encode(str);
-    const hash = await crypto.subtle.digest('SHA-256', buf);
-    return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
 async function adminLogin() {
     const pw = prompt('Admin token:');
     if (!pw) return;
-    adminLogin._pw = pw;
-    adminMode = true;
-    document.getElementById('vortexCard').classList.add('admin-mode');
-    document.getElementById('adminStatus').textContent = '🟢 Admin mode active.';
-    document.getElementById('adminClaimBtn').style.display = 'flex';
-    document.getElementById('claimBtn').style.display = 'none';
-    document.getElementById('getKeyBtn').style.display = 'none';
+    // verify by hitting /admin with a test key
+    try {
+        const testKey = 'VX-TEST' + Math.random().toString(36).substring(2,6).toUpperCase();
+        const url = `${WORKER_URL}/admin?key=${encodeURIComponent(testKey)}&hours=1&pw=${encodeURIComponent(pw)}&profile=AdminTest`;
+        const res = await fetchWithTimeout(url);
+        const data = await parseResponse(res);
+        if (!data.success) {
+            alert('Wrong admin token.');
+            return;
+        }
+        adminLogin._pw = pw;
+        adminMode = true;
+        document.getElementById('vortexCard').classList.add('admin-mode');
+        document.getElementById('adminStatus').textContent = '🟢 Admin mode active.';
+        document.getElementById('adminClaimBtn').style.display = 'flex';
+        document.getElementById('claimBtn').style.display = 'none';
+        document.getElementById('getKeyBtn').style.display = 'none';
+        setStatus('Admin mode. Generate key.');
+    } catch {
+        alert('Network error verifying admin.');
+    }
 }
 
 async function adminClaim() {
@@ -508,20 +589,18 @@ async function adminClaim() {
     btn.disabled = true; btn.classList.add('loading');
     btn.innerHTML = '<span class="spinner"></span> Generating...';
 
-    const newKey = 'ADM-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-
     try {
-        const url = `${WORKER_URL}/admin?key=${encodeURIComponent(newKey)}&hours=48&pw=${encodeURIComponent(adminLogin._pw || '')}&profile=Admin`;
+        const url = `${WORKER_URL}/admin?hours=48&pw=${encodeURIComponent(adminLogin._pw || '')}&profile=Admin`;
         const res = await fetchWithTimeout(url);
         const data = await parseResponse(res);
 
-        if (data.success) {
+        if (data.success && data.key) {
             setStatus('Admin key created.');
             const kd = document.getElementById('keyDisplay');
             kd.style.display = 'block';
-            kd.textContent = newKey;
+            kd.textContent = data.key;
             document.getElementById('disclaimer').style.display = 'block';
-            if (navigator.clipboard) navigator.clipboard.writeText(newKey).catch(() => {});
+            if (navigator.clipboard) navigator.clipboard.writeText(data.key).catch(() => {});
         } else {
             showError(data.error || 'Admin error.');
         }
