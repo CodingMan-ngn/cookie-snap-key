@@ -206,7 +206,6 @@ body::after {
 }
 .retry-btn:hover { background: rgba(59, 130, 246, 0.15); }
 
-/* post-key countdown banner */
 .redirect-msg {
     display: none;
     margin-top: 14px;
@@ -388,7 +387,6 @@ body::after {
     <div class="status-msg" id="adminStatus"></div>
 </div>
 
-<!-- dev password prompt -->
 <div class="dev-prompt" id="devPrompt">
     <div class="dev-prompt-box">
         <h3>DEVELOPER ACCESS</h3>
@@ -406,9 +404,6 @@ body::after {
 (function() {
 'use strict';
 
-// ============================================
-// CONFIG
-// ============================================
 const WORKER_URL = 'https://cookie-snap-keys.j26064135.workers.dev';
 const RETURN_URL = 'https://cookie-snap-key.pages.dev/';
 
@@ -418,13 +413,8 @@ const PAGE_WINDOW_MS   = 60000;
 const AUTO_CLAIM_DELAY = 800;
 const REDIRECT_DELAY   = 8;
 
-// dev password — unlock tamper shield
 const DEV_PASSWORD = 'invisible';
 const DEV_FLAG_KEY = 'vortex_dev_unlocked';
-
-// ============================================
-// ANTI-TAMPER (password-gated)
-// ============================================
 const DEV_UNLOCKED = localStorage.getItem(DEV_FLAG_KEY) === '1';
 
 function showDevPrompt() {
@@ -436,11 +426,9 @@ function showDevPrompt() {
     p.classList.add('show');
     setTimeout(() => input.focus(), 100);
 }
-
 function hideDevPrompt() {
     document.getElementById('devPrompt').classList.remove('show');
 }
-
 function tryUnlock() {
     const val = document.getElementById('devPassword').value;
     const err = document.getElementById('devErr');
@@ -456,13 +444,7 @@ function tryUnlock() {
 }
 
 if (!DEV_UNLOCKED) {
-    // block context menu — offer prompt
-    document.addEventListener('contextmenu', e => {
-        e.preventDefault();
-        showDevPrompt();
-    });
-
-    // block dev shortcuts — offer prompt
+    document.addEventListener('contextmenu', e => { e.preventDefault(); showDevPrompt(); });
     document.addEventListener('keydown', e => {
         const k = e.key.toLowerCase();
         const isDevKey =
@@ -470,19 +452,12 @@ if (!DEV_UNLOCKED) {
             (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k)) ||
             (e.ctrlKey && ['u','s','p'].includes(k)) ||
             (e.metaKey && e.altKey && ['i','j','c'].includes(k));
-        if (isDevKey) {
-            e.preventDefault();
-            showDevPrompt();
-            return false;
-        }
+        if (isDevKey) { e.preventDefault(); showDevPrompt(); return false; }
     });
-
-    // block selection / drag
     document.addEventListener('selectstart', e => e.preventDefault());
     document.addEventListener('dragstart', e => e.preventDefault());
 }
 
-// dev prompt buttons
 document.getElementById('devConfirm').addEventListener('click', tryUnlock);
 document.getElementById('devCancel').addEventListener('click', hideDevPrompt);
 document.getElementById('devPassword').addEventListener('keydown', e => {
@@ -490,15 +465,11 @@ document.getElementById('devPassword').addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); hideDevPrompt(); }
 });
 
-// frame busting always on
 try {
     if (window.top !== window.self) window.top.location = window.self.location;
     if (window.opener) window.opener = null;
 } catch (e) {}
 
-// ============================================
-// STATE
-// ============================================
 let session = null;
 let adminMode = false;
 let keyTimerInterval = null;
@@ -511,9 +482,6 @@ let timersRunning = false;
 let autoClaimScheduled = false;
 let funnelToken = localStorage.getItem('vortex_funnel') || '';
 
-// ============================================
-// HELPERS
-// ============================================
 function getParams() { return new URLSearchParams(window.location.search); }
 
 function formatTime(s) {
@@ -525,12 +493,7 @@ function formatTime(s) {
 async function workerFetch(url, options = {}) {
     const headers = Object.assign({}, options.headers || {});
     if (funnelToken) headers['X-Funnel'] = funnelToken;
-    return fetch(url, {
-        ...options,
-        headers,
-        credentials: 'include',
-        cache: 'no-store'
-    });
+    return fetch(url, { ...options, headers, credentials: 'include', cache: 'no-store' });
 }
 
 async function fetchWithTimeout(url, options = {}) {
@@ -550,8 +513,7 @@ async function parseResponse(res) {
 function setStatus(t) { document.getElementById('status').textContent = t; }
 function clearError() {
     const e = document.getElementById('errorMsg');
-    e.textContent = '';
-    e.innerHTML = '';
+    e.textContent = ''; e.innerHTML = '';
 }
 function showError(title, detail) {
     const e = document.getElementById('errorMsg');
@@ -583,22 +545,11 @@ function setCheckpoints(cp1Done, cp2Done) {
     const l2 = document.getElementById('cp2-label');
     c1.classList.remove('active', 'done');
     c2.classList.remove('active', 'done');
-    if (cp1Done) {
-        c1.classList.add('done');
-        l1.textContent = 'Checkpoint 1/2 ✓';
-    } else {
-        c1.classList.add('active');
-        l1.textContent = 'Checkpoint 1/2';
-    }
-    if (cp2Done) {
-        c2.classList.add('done');
-        l2.textContent = 'Checkpoint 2/2 ✓';
-    } else if (cp1Done) {
-        c2.classList.add('active');
-        l2.textContent = 'Checkpoint 2/2';
-    } else {
-        l2.textContent = 'Checkpoint 2/2';
-    }
+    if (cp1Done) { c1.classList.add('done'); l1.textContent = 'Checkpoint 1/2 ✓'; }
+    else { c1.classList.add('active'); l1.textContent = 'Checkpoint 1/2'; }
+    if (cp2Done) { c2.classList.add('done'); l2.textContent = 'Checkpoint 2/2 ✓'; }
+    else if (cp1Done) { c2.classList.add('active'); l2.textContent = 'Checkpoint 2/2'; }
+    else { l2.textContent = 'Checkpoint 2/2'; }
 }
 
 function goToOffer() {
@@ -612,9 +563,6 @@ function hardReset() {
     setTimeout(() => { window.location.replace(window.location.pathname); }, 400);
 }
 
-// ============================================
-// BOOTSTRAP
-// ============================================
 async function bootstrap() {
     clearError();
     hideButtons();
@@ -728,9 +676,6 @@ function showGetKeyButton(label) {
     b.onclick = goToOffer;
 }
 
-// ============================================
-// TIMERS
-// ============================================
 function startTimers() {
     if (timersRunning) return;
     timersRunning = true;
@@ -773,9 +718,6 @@ function stopTimers() {
     timersRunning = false;
 }
 
-// ============================================
-// CLIPBOARD
-// ============================================
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         return navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
@@ -796,15 +738,11 @@ function fallbackCopy(text) {
     } catch (e) { return false; }
 }
 
-// ============================================
-// REVEAL + COUNTDOWN
-// ============================================
 function revealKey(key) {
     const kd = document.getElementById('keyDisplay');
     kd.style.display = 'block';
     kd.textContent = key;
     kd.classList.remove('copied');
-
     document.getElementById('disclaimer').style.display = 'block';
 
     copyToClipboard(key).then(() => {
@@ -819,7 +757,6 @@ function revealKey(key) {
         });
     };
 
-    // clear local funnel state
     localStorage.removeItem('vortex_funnel');
     try { fetch(WORKER_URL + '/reset', { credentials: 'include' }).catch(() => {}); } catch (e) {}
 
@@ -846,9 +783,6 @@ function startRedirectCountdown() {
     }, 1000);
 }
 
-// ============================================
-// CLAIM
-// ============================================
 async function claimKey() {
     if (isClaiming) return;
     isClaiming = true;
@@ -866,7 +800,6 @@ async function claimKey() {
         const sData = await parseResponse(sRes);
 
         if (!sData.success || !sData.session) {
-            // auto-retry on cooldown
             if (sData.error === 'too_many_requests') {
                 let wait = 3;
                 setStatus('Cooling down — retrying in ' + wait + 's...');
@@ -916,13 +849,8 @@ async function claimKey() {
             showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
             const tick = setInterval(() => {
                 wait--;
-                if (wait <= 0) {
-                    clearInterval(tick);
-                    clearError();
-                    claimKey();
-                } else {
-                    showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
-                }
+                if (wait <= 0) { clearInterval(tick); clearError(); claimKey(); }
+                else { showError('too_many_requests', 'Retrying automatically in ' + wait + 's...'); }
             }, 1000);
             if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
             isClaiming = false;
@@ -944,9 +872,6 @@ async function claimKey() {
 }
 document.getElementById('claimBtn').addEventListener('click', claimKey);
 
-// ============================================
-// ADMIN — 5 clicks on logo
-// ============================================
 let logoClicks = 0, logoTimer = null;
 document.getElementById('vortexLogo').addEventListener('click', () => {
     logoClicks++;
