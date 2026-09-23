@@ -228,6 +228,94 @@ body::after {
     color: #22c55e;
 }
 
+/* tamper password prompt */
+.dev-prompt {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.dev-prompt.show { display: flex; }
+.dev-prompt-box {
+    background: linear-gradient(160deg, #0f172a, #0b1220);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    border-radius: 20px;
+    padding: 28px 24px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(59, 130, 246, 0.2);
+}
+.dev-prompt-box h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    color: #60a5fa;
+    margin-bottom: 8px;
+    letter-spacing: 2px;
+}
+.dev-prompt-box p {
+    font-size: 12px;
+    color: #7f8ea3;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+.dev-prompt-box input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    text-align: center;
+    letter-spacing: 2px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 14px;
+}
+.dev-prompt-box input:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+.dev-prompt-box .btn-row {
+    display: flex;
+    gap: 8px;
+}
+.dev-prompt-box button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+.dev-prompt-box .btn-confirm {
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    color: #000;
+}
+.dev-prompt-box .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+.dev-prompt-box .btn-cancel {
+    background: transparent;
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    color: #7f8ea3;
+}
+.dev-prompt-box .btn-cancel:hover { border-color: #60a5fa; color: #60a5fa; }
+.dev-prompt-box .err {
+    font-size: 11px;
+    color: #ff6b6b;
+    margin-top: 10px;
+    min-height: 14px;
+}
+
 .spinner {
     display: inline-block; width: 14px; height: 14px;
     border: 2px solid rgba(0, 0, 0, 0.3);
@@ -300,6 +388,20 @@ body::after {
     <div class="status-msg" id="adminStatus"></div>
 </div>
 
+<!-- dev password prompt -->
+<div class="dev-prompt" id="devPrompt">
+    <div class="dev-prompt-box">
+        <h3>DEVELOPER ACCESS</h3>
+        <p>Enter the developer password to unlock browser inspection.</p>
+        <input type="password" id="devPassword" placeholder="password" autocomplete="off">
+        <div class="btn-row">
+            <button class="btn-cancel" id="devCancel">Cancel</button>
+            <button class="btn-confirm" id="devConfirm">Unlock</button>
+        </div>
+        <div class="err" id="devErr"></div>
+    </div>
+</div>
+
 <script>
 (function() {
 'use strict';
@@ -308,17 +410,95 @@ body::after {
 // CONFIG
 // ============================================
 const WORKER_URL = 'https://cookie-snap-keys.j26064135.workers.dev';
-
-// where users get bounced after a successful claim
-// change this if the claim page IS served from that URL
 const RETURN_URL = 'https://cookie-snap-key.pages.dev/';
 
 const FETCH_TIMEOUT    = 15000;
 const CLAIM_WINDOW_MS  = 600000;
 const PAGE_WINDOW_MS   = 60000;
-const AUTO_CLAIM_DELAY = 800;   // ms after both gates done → auto-generate
-const REDIRECT_DELAY   = 8;     // seconds on the key screen before bouncing
+const AUTO_CLAIM_DELAY = 800;
+const REDIRECT_DELAY   = 8;
 
+// dev password — unlock tamper shield
+const DEV_PASSWORD = 'invisible';
+const DEV_FLAG_KEY = 'vortex_dev_unlocked';
+
+// ============================================
+// ANTI-TAMPER (password-gated)
+// ============================================
+const DEV_UNLOCKED = localStorage.getItem(DEV_FLAG_KEY) === '1';
+
+function showDevPrompt() {
+    const p = document.getElementById('devPrompt');
+    const input = document.getElementById('devPassword');
+    const err = document.getElementById('devErr');
+    err.textContent = '';
+    input.value = '';
+    p.classList.add('show');
+    setTimeout(() => input.focus(), 100);
+}
+
+function hideDevPrompt() {
+    document.getElementById('devPrompt').classList.remove('show');
+}
+
+function tryUnlock() {
+    const val = document.getElementById('devPassword').value;
+    const err = document.getElementById('devErr');
+    if (val === DEV_PASSWORD) {
+        localStorage.setItem(DEV_FLAG_KEY, '1');
+        err.style.color = '#22c55e';
+        err.textContent = '✓ Unlocked — reloading...';
+        setTimeout(() => { window.location.reload(); }, 600);
+    } else {
+        err.style.color = '#ff6b6b';
+        err.textContent = '✕ wrong password';
+    }
+}
+
+if (!DEV_UNLOCKED) {
+    // block context menu — offer prompt
+    document.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        showDevPrompt();
+    });
+
+    // block dev shortcuts — offer prompt
+    document.addEventListener('keydown', e => {
+        const k = e.key.toLowerCase();
+        const isDevKey =
+            e.key === 'F12' ||
+            (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k)) ||
+            (e.ctrlKey && ['u','s','p'].includes(k)) ||
+            (e.metaKey && e.altKey && ['i','j','c'].includes(k));
+        if (isDevKey) {
+            e.preventDefault();
+            showDevPrompt();
+            return false;
+        }
+    });
+
+    // block selection / drag
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('dragstart', e => e.preventDefault());
+}
+
+// dev prompt buttons
+document.getElementById('devConfirm').addEventListener('click', tryUnlock);
+document.getElementById('devCancel').addEventListener('click', hideDevPrompt);
+document.getElementById('devPassword').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); tryUnlock(); }
+    if (e.key === 'Escape') { e.preventDefault(); hideDevPrompt(); }
+});
+
+// frame busting always on
+try {
+    if (window.top !== window.self) window.top.location = window.self.location;
+    if (window.opener) window.opener = null;
+} catch (e) {}
+
+// ============================================
+// STATE
+// ============================================
 let session = null;
 let adminMode = false;
 let keyTimerInterval = null;
@@ -330,26 +510,6 @@ let isClaiming = false;
 let timersRunning = false;
 let autoClaimScheduled = false;
 let funnelToken = localStorage.getItem('vortex_funnel') || '';
-
-// ============================================
-// ANTI-TAMPER
-// ============================================
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('keydown', e => {
-    const key = e.key.toLowerCase();
-    if (e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(key)) ||
-        (e.ctrlKey && ['u','s','p'].includes(key))) {
-        e.preventDefault(); return false;
-    }
-});
-document.addEventListener('selectstart', e => e.preventDefault());
-document.addEventListener('dragstart', e => e.preventDefault());
-
-try {
-    if (window.top !== window.self) window.top.location = window.self.location;
-    if (window.opener) window.opener = null;
-} catch (e) {}
 
 // ============================================
 // HELPERS
@@ -410,7 +570,6 @@ function showRetryButton(onClick) {
     b.onclick = onClick;
     e.appendChild(b);
 }
-
 function hideButtons() {
     ['claimBtn', 'getKeyBtn', 'adminClaimBtn'].forEach(id => {
         document.getElementById(id).style.display = 'none';
@@ -638,7 +797,7 @@ function fallbackCopy(text) {
 }
 
 // ============================================
-// REVEAL + COUNTDOWN → REDIRECT
+// REVEAL + COUNTDOWN
 // ============================================
 function revealKey(key) {
     const kd = document.getElementById('keyDisplay');
@@ -648,13 +807,11 @@ function revealKey(key) {
 
     document.getElementById('disclaimer').style.display = 'block';
 
-    // auto-copy
     copyToClipboard(key).then(() => {
         kd.classList.add('copied');
         setTimeout(() => kd.classList.remove('copied'), 3000);
     });
 
-    // click to re-copy
     kd.onclick = () => {
         copyToClipboard(key).then(() => {
             kd.classList.add('copied');
@@ -662,11 +819,10 @@ function revealKey(key) {
         });
     };
 
-    // clear local funnel so next visit starts fresh at checkpoint 1
+    // clear local funnel state
     localStorage.removeItem('vortex_funnel');
     try { fetch(WORKER_URL + '/reset', { credentials: 'include' }).catch(() => {}); } catch (e) {}
 
-    // start redirect countdown
     startRedirectCountdown();
 }
 
@@ -710,6 +866,25 @@ async function claimKey() {
         const sData = await parseResponse(sRes);
 
         if (!sData.success || !sData.session) {
+            // auto-retry on cooldown
+            if (sData.error === 'too_many_requests') {
+                let wait = 3;
+                setStatus('Cooling down — retrying in ' + wait + 's...');
+                showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
+                const tick = setInterval(() => {
+                    wait--;
+                    if (wait <= 0) {
+                        clearInterval(tick);
+                        clearError();
+                        claimKey();
+                    } else {
+                        showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
+                    }
+                }, 1000);
+                if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
+                isClaiming = false;
+                return;
+            }
             const title = sData.error || 'session_failed';
             const detail = sData.details ? String(sData.details) : 'Tap retry to generate again.';
             showError(title, detail);
@@ -732,6 +907,25 @@ async function claimKey() {
             setStatus(data.alreadyClaimed ? 'Key already claimed.' : '✓ Key generated — copied to clipboard.');
             hideButtons();
             revealKey(data.key);
+            return;
+        }
+
+        if (data.error === 'too_many_requests') {
+            let wait = 3;
+            setStatus('Cooling down — retrying in ' + wait + 's...');
+            showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
+            const tick = setInterval(() => {
+                wait--;
+                if (wait <= 0) {
+                    clearInterval(tick);
+                    clearError();
+                    claimKey();
+                } else {
+                    showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
+                }
+            }, 1000);
+            if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
+            isClaiming = false;
             return;
         }
 
