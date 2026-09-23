@@ -130,6 +130,23 @@ body::after {
     font-size: 18px; color: #60a5fa;
     word-break: break-all; letter-spacing: 1px;
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+    cursor: pointer;
+    position: relative;
+}
+.key-display::after {
+    content: "click to copy";
+    display: block;
+    margin-top: 8px;
+    font-size: 10px;
+    color: #7f8ea3;
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 400;
+}
+.key-display.copied::after {
+    content: "✓ copied";
+    color: #22c55e;
 }
 .disclaimer {
     margin-top: 16px;
@@ -151,9 +168,44 @@ body::after {
 .status-msg { font-size: 13px; margin-top: 12px; color: #a3b1c6; }
 .error-msg {
     font-size: 12px; margin-top: 12px; color: #ff6b6b;
-    min-height: 18px; line-height: 1.4;
-    word-break: break-all;
+    min-height: 18px; line-height: 1.5;
+    word-break: break-word;
+    text-align: left;
+    padding: 0 4px;
 }
+.error-msg:not(:empty) {
+    background: rgba(255, 107, 107, 0.08);
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+.error-msg .err-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #ff9090;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 4px;
+}
+.retry-btn {
+    display: inline-block;
+    margin-top: 10px;
+    background: transparent;
+    border: 1px solid #3b82f6;
+    color: #60a5fa;
+    padding: 8px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transition: background 0.2s;
+    width: 100%;
+    margin-top: 12px;
+}
+.retry-btn:hover { background: rgba(59, 130, 246, 0.15); }
 .spinner {
     display: inline-block; width: 14px; height: 14px;
     border: 2px solid rgba(0, 0, 0, 0.3);
@@ -228,9 +280,10 @@ body::after {
 'use strict';
 
 const WORKER_URL = 'https://cookie-snap-keys.j26064135.workers.dev';
-const FETCH_TIMEOUT   = 12000;
+const FETCH_TIMEOUT   = 15000;
 const CLAIM_WINDOW_MS = 600000;
 const PAGE_WINDOW_MS  = 60000;
+const AUTO_CLAIM_DELAY = 800;
 
 let session = null;
 let adminMode = false;
@@ -240,6 +293,7 @@ let keyTimerRemaining = Math.floor(CLAIM_WINDOW_MS / 1000);
 let pageTimerRemaining = Math.floor(PAGE_WINDOW_MS / 1000);
 let isClaiming = false;
 let timersRunning = false;
+let autoClaimScheduled = false;
 let funnelToken = localStorage.getItem('vortex_funnel') || '';
 
 document.addEventListener('contextmenu', e => e.preventDefault());
@@ -289,12 +343,36 @@ async function fetchWithTimeout(url, options = {}) {
 }
 
 async function parseResponse(res) {
-    try { return await res.json(); } catch { return { error: `Server ${res.status}` }; }
+    try { return await res.json(); } catch { return { error: `http_${res.status}` }; }
 }
 
 function setStatus(t) { document.getElementById('status').textContent = t; }
-function clearError() { document.getElementById('errorMsg').textContent = ''; }
-function showError(msg) { document.getElementById('errorMsg').textContent = msg; }
+function clearError() {
+    const e = document.getElementById('errorMsg');
+    e.textContent = '';
+    e.innerHTML = '';
+}
+function showError(title, detail) {
+    const e = document.getElementById('errorMsg');
+    e.innerHTML = '';
+    const tag = document.createElement('span');
+    tag.className = 'err-tag';
+    tag.textContent = title || 'error';
+    e.appendChild(tag);
+    if (detail) {
+        const d = document.createTextNode(detail);
+        e.appendChild(d);
+    }
+}
+function showRetryButton(onClick) {
+    const e = document.getElementById('errorMsg');
+    const b = document.createElement('button');
+    b.className = 'retry-btn';
+    b.textContent = '▶ RETRY';
+    b.onclick = onClick;
+    e.appendChild(b);
+}
+
 function hideButtons() {
     ['claimBtn', 'getKeyBtn', 'adminClaimBtn'].forEach(id => {
         document.getElementById(id).style.display = 'none';
@@ -330,14 +408,11 @@ function goToOffer() {
     window.location.href = WORKER_URL + '/funnel-goto';
 }
 
-function hardReset(reason) {
+function hardReset() {
     localStorage.removeItem('vortex_funnel');
     funnelToken = '';
     try { fetch(WORKER_URL + '/reset', { credentials: 'include' }).catch(() => {}); } catch (e) {}
-    // full page reload — resets params, timers, everything
-    setTimeout(() => {
-        window.location.replace(window.location.pathname);
-    }, 200);
+    setTimeout(() => { window.location.replace(window.location.pathname); }, 400);
 }
 
 async function bootstrap() {
@@ -345,7 +420,9 @@ async function bootstrap() {
     hideButtons();
     document.getElementById('keyDisplay').style.display = 'none';
     document.getElementById('keyDisplay').textContent = '';
+    document.getElementById('keyDisplay').classList.remove('copied');
     document.getElementById('disclaimer').style.display = 'none';
+    autoClaimScheduled = false;
     setCheckpoints(false, false);
 
     if (adminMode) { setStatus('Admin mode active.'); return; }
@@ -362,8 +439,8 @@ async function bootstrap() {
             blocked_ua: 'Access denied.',
             rate_limited: 'Too many attempts. Try again later.'
         };
-        showError(map[err] || 'Restarting...');
-        hardReset('error_' + err);
+        showError('verification_' + err, map[err] || 'Restarting...');
+        setTimeout(hardReset, 1800);
         return;
     }
 
@@ -389,13 +466,13 @@ async function bootstrap() {
         const data = await parseResponse(res);
 
         if (!res.ok) {
-            if (data && (data.action === 'reset' || data.error === 'invalid_funnel' || data.error === 'blocked_ua' || data.error === 'rate_limited')) {
-                showError('Session invalid. Restarting...');
-                hardReset('funnel_http_' + res.status);
+            if (data && data.action === 'reset') {
+                showError('session_invalid', 'Restarting clean...');
+                setTimeout(hardReset, 1800);
                 return;
             }
-            showError('Server returned ' + res.status + '. Retrying...');
-            setTimeout(() => bootstrap(), 2000);
+            showError('http_' + res.status, 'Server busy. Retrying...');
+            setTimeout(() => bootstrap(), 2500);
             return;
         }
 
@@ -405,21 +482,25 @@ async function bootstrap() {
         }
 
         if (!data.success) {
-            if (data.action === 'reset' || data.error === 'invalid_funnel' || data.error === 'blocked_ua' || data.error === 'rate_limited') {
-                showError('Session invalid. Restarting...');
-                hardReset('funnel_bad');
+            if (data.action === 'reset') {
+                showError('session_invalid', 'Restarting clean...');
+                setTimeout(hardReset, 1800);
                 return;
             }
-            showError(data.error || 'Session error.');
+            showError(data.error || 'funnel_failed', 'Tap retry to start over.');
             showGetKeyButton('🛒 Get Key');
             return;
         }
 
         if (data.gate1Done && data.gate2Done && data.dataCode) {
+            // both gates done → auto-generate key, no click needed
             setCheckpoints(true, true);
-            setStatus('All checkpoints complete. Generate your key.');
-            document.getElementById('claimBtn').style.display = 'flex';
+            setStatus('Verifying — generating key...');
             startTimers();
+            if (!autoClaimScheduled) {
+                autoClaimScheduled = true;
+                setTimeout(claimKey, AUTO_CLAIM_DELAY);
+            }
             return;
         }
 
@@ -435,8 +516,8 @@ async function bootstrap() {
         setStatus('Complete checkpoint 1/2 to continue.');
         showGetKeyButton('🛒 Start Checkpoint 1/2');
     } catch (err) {
-        showError('Connection failed — retrying in 2s...');
-        setTimeout(() => bootstrap(), 2000);
+        showError('network', 'Connection failed — retrying in 2s...');
+        setTimeout(() => bootstrap(), 2500);
     }
 }
 
@@ -465,7 +546,7 @@ function startTimers() {
         if (keyTimerRemaining <= 30) kEl.classList.add('warning');
         if (keyTimerRemaining <= 0) {
             clearInterval(keyTimerInterval); keyTimerInterval = null;
-            showError('Claim window expired.');
+            showError('expired', 'Claim window expired.');
             hideButtons();
             showGetKeyButton('🛒 Start over');
         }
@@ -483,27 +564,74 @@ function startTimers() {
     }, 1000);
 }
 
+function copyToClipboard(text) {
+    // try modern API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+    }
+    return Promise.resolve(fallbackCopy(text));
+}
+
+function fallbackCopy(text) {
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        return true;
+    } catch (e) { return false; }
+}
+
+function revealKey(key) {
+    const kd = document.getElementById('keyDisplay');
+    kd.style.display = 'block';
+    kd.textContent = key;
+    kd.classList.remove('copied');
+
+    document.getElementById('disclaimer').style.display = 'block';
+
+    copyToClipboard(key).then(() => {
+        kd.classList.add('copied');
+        setTimeout(() => kd.classList.remove('copied'), 3000);
+    });
+
+    kd.onclick = () => {
+        copyToClipboard(key).then(() => {
+            kd.classList.add('copied');
+            setTimeout(() => kd.classList.remove('copied'), 2000);
+        });
+    };
+
+    localStorage.removeItem('vortex_funnel');
+}
+
 async function claimKey() {
     if (isClaiming) return;
     isClaiming = true;
     const btn = document.getElementById('claimBtn');
-    const original = btn.innerHTML;
-    btn.disabled = true; btn.classList.add('loading');
-    btn.innerHTML = '<span class="spinner"></span> Generating...';
+    const original = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true; btn.classList.add('loading');
+        btn.innerHTML = '<span class="spinner"></span> Generating...';
+    }
     clearError();
+    setStatus('Generating key...');
 
     try {
         const sRes = await fetchWithTimeout(`${WORKER_URL}/session`);
         const sData = await parseResponse(sRes);
 
         if (!sData.success || !sData.session) {
-            const msg = sData.details
-                ? (sData.error + ': ' + sData.details)
-                : (sData.error || 'session_failed');
-            showError(msg);
-            btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
+            const title = sData.error || 'session_failed';
+            const detail = sData.details ? String(sData.details) : 'Tap retry to generate again.';
+            showError(title, detail);
+            showRetryButton(() => { clearError(); claimKey(); });
+            if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
             isClaiming = false;
-            setTimeout(() => hardReset('session_fail'), 1500);
             return;
         }
         session = sData.session;
@@ -520,39 +648,21 @@ async function claimKey() {
             if (pageTimerInterval) clearInterval(pageTimerInterval);
             timersRunning = false;
 
-            setStatus(data.alreadyClaimed ? 'Key already claimed.' : 'Key generated.');
+            setStatus(data.alreadyClaimed ? 'Key already claimed.' : '✓ Key generated — copied to clipboard.');
             hideButtons();
-
-            const kd = document.getElementById('keyDisplay');
-            kd.style.display = 'block';
-            kd.textContent = data.key;
-
-            document.getElementById('disclaimer').style.display = 'block';
-            if (navigator.clipboard) navigator.clipboard.writeText(data.key).catch(() => {});
-
-            localStorage.removeItem('vortex_funnel');
-
-            setTimeout(() => {
-                try { window.close(); } catch (e) {}
-                setTimeout(() => { window.location.replace('about:blank'); }, 400);
-            }, 15000);
+            revealKey(data.key);
             return;
         }
 
-        const msg = data.details
-            ? (data.error + ': ' + data.details)
-            : (data.error || 'claim_failed');
-        showError(msg);
-        btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
-
-        if (data.action === 'reset' || /invalid_session|invalid_funnel|gates_incomplete|ua_mismatch|ip_mismatch|server_error/.test(data.error || '')) {
-            isClaiming = false;
-            setTimeout(() => hardReset('claim_fail'), 1500);
-            return;
-        }
+        const title = data.error || 'claim_failed';
+        const detail = data.details ? String(data.details) : 'Tap retry to generate again.';
+        showError(title, detail);
+        showRetryButton(() => { clearError(); claimKey(); });
+        if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
     } catch (err) {
-        showError('Network error: ' + (err.message || 'unknown'));
-        btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
+        showError('network', (err && err.message) ? String(err.message) : 'Connection failed.');
+        showRetryButton(() => { clearError(); claimKey(); });
+        if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
     } finally {
         isClaiming = false;
     }
@@ -576,10 +686,7 @@ async function adminLogin() {
         const url = `${WORKER_URL}/admin?key=${encodeURIComponent(testKey)}&hours=1&pw=${encodeURIComponent(pw)}&profile=AdminTest`;
         const res = await fetchWithTimeout(url);
         const data = await parseResponse(res);
-        if (!data.success) {
-            alert('Wrong admin token.');
-            return;
-        }
+        if (!data.success) { alert('Wrong admin token.'); return; }
         adminLogin._pw = pw;
         adminMode = true;
         document.getElementById('vortexCard').classList.add('admin-mode');
@@ -600,6 +707,7 @@ async function adminClaim() {
     const original = btn.innerHTML;
     btn.disabled = true; btn.classList.add('loading');
     btn.innerHTML = '<span class="spinner"></span> Generating...';
+    clearError();
 
     try {
         const url = `${WORKER_URL}/admin?hours=2&pw=${encodeURIComponent(adminLogin._pw || '')}&profile=Admin`;
@@ -607,17 +715,16 @@ async function adminClaim() {
         const data = await parseResponse(res);
 
         if (data.success && data.key) {
-            setStatus('Admin key created (2h).');
-            const kd = document.getElementById('keyDisplay');
-            kd.style.display = 'block';
-            kd.textContent = data.key;
-            document.getElementById('disclaimer').style.display = 'block';
-            if (navigator.clipboard) navigator.clipboard.writeText(data.key).catch(() => {});
+            setStatus('✓ Admin key generated — copied to clipboard.');
+            revealKey(data.key);
         } else {
-            showError(data.error || 'Admin error.');
+            showError(data.error || 'admin_failed', data.details || 'Tap retry.');
+            showRetryButton(() => { clearError(); adminClaim(); });
         }
-    } catch { showError('Network error.'); }
-    finally {
+    } catch (err) {
+        showError('network', err.message || 'Connection failed.');
+        showRetryButton(() => { clearError(); adminClaim(); });
+    } finally {
         btn.disabled = false; btn.classList.remove('loading');
         btn.innerHTML = original;
         isClaiming = false;
