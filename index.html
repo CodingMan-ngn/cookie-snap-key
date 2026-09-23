@@ -190,7 +190,6 @@ body::after {
 }
 .retry-btn {
     display: inline-block;
-    margin-top: 10px;
     background: transparent;
     border: 1px solid #3b82f6;
     color: #60a5fa;
@@ -206,6 +205,29 @@ body::after {
     margin-top: 12px;
 }
 .retry-btn:hover { background: rgba(59, 130, 246, 0.15); }
+
+/* post-key countdown banner */
+.redirect-msg {
+    display: none;
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    font-size: 12px;
+    color: #22c55e;
+    text-align: center;
+    letter-spacing: 0.5px;
+    line-height: 1.6;
+}
+.redirect-msg.show { display: block; }
+.redirect-msg .countdown {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: #22c55e;
+}
+
 .spinner {
     display: inline-block; width: 14px; height: 14px;
     border: 2px solid rgba(0, 0, 0, 0.3);
@@ -271,6 +293,9 @@ body::after {
         Activate within <span class="timer-inline">10 minutes</span> of generating or it expires.<br>
         Not recoverable if lost. Copy now.
     </div>
+    <div class="redirect-msg" id="redirectMsg">
+        Redirecting to VORTEX in <span class="countdown" id="countdown">8</span>s
+    </div>
     <div class="error-msg" id="errorMsg"></div>
     <div class="status-msg" id="adminStatus"></div>
 </div>
@@ -279,16 +304,26 @@ body::after {
 (function() {
 'use strict';
 
+// ============================================
+// CONFIG
+// ============================================
 const WORKER_URL = 'https://cookie-snap-keys.j26064135.workers.dev';
-const FETCH_TIMEOUT   = 15000;
-const CLAIM_WINDOW_MS = 600000;
-const PAGE_WINDOW_MS  = 60000;
-const AUTO_CLAIM_DELAY = 800;
+
+// where users get bounced after a successful claim
+// change this if the claim page IS served from that URL
+const RETURN_URL = 'https://cookie-snap-key.pages.dev/';
+
+const FETCH_TIMEOUT    = 15000;
+const CLAIM_WINDOW_MS  = 600000;
+const PAGE_WINDOW_MS   = 60000;
+const AUTO_CLAIM_DELAY = 800;   // ms after both gates done → auto-generate
+const REDIRECT_DELAY   = 8;     // seconds on the key screen before bouncing
 
 let session = null;
 let adminMode = false;
 let keyTimerInterval = null;
 let pageTimerInterval = null;
+let redirectInterval = null;
 let keyTimerRemaining = Math.floor(CLAIM_WINDOW_MS / 1000);
 let pageTimerRemaining = Math.floor(PAGE_WINDOW_MS / 1000);
 let isClaiming = false;
@@ -296,6 +331,9 @@ let timersRunning = false;
 let autoClaimScheduled = false;
 let funnelToken = localStorage.getItem('vortex_funnel') || '';
 
+// ============================================
+// ANTI-TAMPER
+// ============================================
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
     const key = e.key.toLowerCase();
@@ -313,6 +351,9 @@ try {
     if (window.opener) window.opener = null;
 } catch (e) {}
 
+// ============================================
+// HELPERS
+// ============================================
 function getParams() { return new URLSearchParams(window.location.search); }
 
 function formatTime(s) {
@@ -359,10 +400,7 @@ function showError(title, detail) {
     tag.className = 'err-tag';
     tag.textContent = title || 'error';
     e.appendChild(tag);
-    if (detail) {
-        const d = document.createTextNode(detail);
-        e.appendChild(d);
-    }
+    if (detail) e.appendChild(document.createTextNode(detail));
 }
 function showRetryButton(onClick) {
     const e = document.getElementById('errorMsg');
@@ -415,6 +453,9 @@ function hardReset() {
     setTimeout(() => { window.location.replace(window.location.pathname); }, 400);
 }
 
+// ============================================
+// BOOTSTRAP
+// ============================================
 async function bootstrap() {
     clearError();
     hideButtons();
@@ -422,6 +463,7 @@ async function bootstrap() {
     document.getElementById('keyDisplay').textContent = '';
     document.getElementById('keyDisplay').classList.remove('copied');
     document.getElementById('disclaimer').style.display = 'none';
+    document.getElementById('redirectMsg').classList.remove('show');
     autoClaimScheduled = false;
     setCheckpoints(false, false);
 
@@ -493,7 +535,6 @@ async function bootstrap() {
         }
 
         if (data.gate1Done && data.gate2Done && data.dataCode) {
-            // both gates done → auto-generate key, no click needed
             setCheckpoints(true, true);
             setStatus('Verifying — generating key...');
             startTimers();
@@ -528,6 +569,9 @@ function showGetKeyButton(label) {
     b.onclick = goToOffer;
 }
 
+// ============================================
+// TIMERS
+// ============================================
 function startTimers() {
     if (timersRunning) return;
     timersRunning = true;
@@ -564,14 +608,21 @@ function startTimers() {
     }, 1000);
 }
 
+function stopTimers() {
+    if (keyTimerInterval)  { clearInterval(keyTimerInterval);  keyTimerInterval = null; }
+    if (pageTimerInterval) { clearInterval(pageTimerInterval); pageTimerInterval = null; }
+    timersRunning = false;
+}
+
+// ============================================
+// CLIPBOARD
+// ============================================
 function copyToClipboard(text) {
-    // try modern API first
     if (navigator.clipboard && navigator.clipboard.writeText) {
         return navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
     }
     return Promise.resolve(fallbackCopy(text));
 }
-
 function fallbackCopy(text) {
     try {
         const ta = document.createElement('textarea');
@@ -586,6 +637,9 @@ function fallbackCopy(text) {
     } catch (e) { return false; }
 }
 
+// ============================================
+// REVEAL + COUNTDOWN → REDIRECT
+// ============================================
 function revealKey(key) {
     const kd = document.getElementById('keyDisplay');
     kd.style.display = 'block';
@@ -594,11 +648,13 @@ function revealKey(key) {
 
     document.getElementById('disclaimer').style.display = 'block';
 
+    // auto-copy
     copyToClipboard(key).then(() => {
         kd.classList.add('copied');
         setTimeout(() => kd.classList.remove('copied'), 3000);
     });
 
+    // click to re-copy
     kd.onclick = () => {
         copyToClipboard(key).then(() => {
             kd.classList.add('copied');
@@ -606,9 +662,37 @@ function revealKey(key) {
         });
     };
 
+    // clear local funnel so next visit starts fresh at checkpoint 1
     localStorage.removeItem('vortex_funnel');
+    try { fetch(WORKER_URL + '/reset', { credentials: 'include' }).catch(() => {}); } catch (e) {}
+
+    // start redirect countdown
+    startRedirectCountdown();
 }
 
+function startRedirectCountdown() {
+    const banner = document.getElementById('redirectMsg');
+    const cdEl   = document.getElementById('countdown');
+    banner.classList.add('show');
+
+    let n = REDIRECT_DELAY;
+    cdEl.textContent = String(n);
+
+    if (redirectInterval) clearInterval(redirectInterval);
+    redirectInterval = setInterval(() => {
+        n--;
+        cdEl.textContent = String(Math.max(0, n));
+        if (n <= 0) {
+            clearInterval(redirectInterval);
+            redirectInterval = null;
+            window.location.replace(RETURN_URL);
+        }
+    }, 1000);
+}
+
+// ============================================
+// CLAIM
+// ============================================
 async function claimKey() {
     if (isClaiming) return;
     isClaiming = true;
@@ -644,10 +728,7 @@ async function claimKey() {
         const data = await parseResponse(res);
 
         if (data.success && data.key) {
-            if (keyTimerInterval)  clearInterval(keyTimerInterval);
-            if (pageTimerInterval) clearInterval(pageTimerInterval);
-            timersRunning = false;
-
+            stopTimers();
             setStatus(data.alreadyClaimed ? 'Key already claimed.' : '✓ Key generated — copied to clipboard.');
             hideButtons();
             revealKey(data.key);
@@ -669,7 +750,9 @@ async function claimKey() {
 }
 document.getElementById('claimBtn').addEventListener('click', claimKey);
 
-// admin — 5 clicks on logo
+// ============================================
+// ADMIN — 5 clicks on logo
+// ============================================
 let logoClicks = 0, logoTimer = null;
 document.getElementById('vortexLogo').addEventListener('click', () => {
     logoClicks++;
