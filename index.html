@@ -150,8 +150,9 @@ body::after {
 }
 .status-msg { font-size: 13px; margin-top: 12px; color: #a3b1c6; }
 .error-msg {
-    font-size: 13px; margin-top: 12px; color: #ff6b6b;
+    font-size: 12px; margin-top: 12px; color: #ff6b6b;
     min-height: 18px; line-height: 1.4;
+    word-break: break-all;
 }
 .spinner {
     display: inline-block; width: 14px; height: 14px;
@@ -231,7 +232,6 @@ const FETCH_TIMEOUT   = 12000;
 const CLAIM_WINDOW_MS = 600000;
 const PAGE_WINDOW_MS  = 60000;
 
-const params = new URLSearchParams(window.location.search);
 let session = null;
 let adminMode = false;
 let keyTimerInterval = null;
@@ -258,6 +258,8 @@ try {
     if (window.top !== window.self) window.top.location = window.self.location;
     if (window.opener) window.opener = null;
 } catch (e) {}
+
+function getParams() { return new URLSearchParams(window.location.search); }
 
 function formatTime(s) {
     if (s < 0) s = 0;
@@ -328,17 +330,14 @@ function goToOffer() {
     window.location.href = WORKER_URL + '/funnel-goto';
 }
 
-async function hardReset() {
-    try { await fetch(WORKER_URL + '/reset', { credentials: 'include' }); } catch (e) {}
+function hardReset(reason) {
     localStorage.removeItem('vortex_funnel');
     funnelToken = '';
-    if (keyTimerInterval)  { clearInterval(keyTimerInterval);  keyTimerInterval = null; }
-    if (pageTimerInterval) { clearInterval(pageTimerInterval); pageTimerInterval = null; }
-    timersRunning = false;
-    keyTimerRemaining  = Math.floor(CLAIM_WINDOW_MS / 1000);
-    pageTimerRemaining = Math.floor(PAGE_WINDOW_MS / 1000);
-    window.history.replaceState(null, '', '/');
-    setTimeout(() => bootstrap(), 800);
+    try { fetch(WORKER_URL + '/reset', { credentials: 'include' }).catch(() => {}); } catch (e) {}
+    // full page reload — resets params, timers, everything
+    setTimeout(() => {
+        window.location.replace(window.location.pathname);
+    }, 200);
 }
 
 async function bootstrap() {
@@ -351,6 +350,7 @@ async function bootstrap() {
 
     if (adminMode) { setStatus('Admin mode active.'); return; }
 
+    const params = getParams();
     const err = params.get('error');
     if (err) {
         const map = {
@@ -363,7 +363,7 @@ async function bootstrap() {
             rate_limited: 'Too many attempts. Try again later.'
         };
         showError(map[err] || 'Restarting...');
-        await hardReset();
+        hardReset('error_' + err);
         return;
     }
 
@@ -374,12 +374,13 @@ async function bootstrap() {
         b.style.display = 'flex';
         b.textContent = '▶ Start Checkpoint 2/2';
         b.onclick = goToOffer;
+        window.history.replaceState(null, '', '/');
         setTimeout(goToOffer, 2000);
         return;
     }
 
     if (params.toString()) {
-        setTimeout(() => window.history.replaceState(null, '', '/'), 300);
+        window.history.replaceState(null, '', '/');
     }
 
     setStatus('Loading...');
@@ -388,9 +389,9 @@ async function bootstrap() {
         const data = await parseResponse(res);
 
         if (!res.ok) {
-            if (data && (data.error === 'invalid_funnel' || data.error === 'blocked_ua' || data.error === 'rate_limited')) {
+            if (data && (data.action === 'reset' || data.error === 'invalid_funnel' || data.error === 'blocked_ua' || data.error === 'rate_limited')) {
                 showError('Session invalid. Restarting...');
-                await hardReset();
+                hardReset('funnel_http_' + res.status);
                 return;
             }
             showError('Server returned ' + res.status + '. Retrying...');
@@ -404,9 +405,9 @@ async function bootstrap() {
         }
 
         if (!data.success) {
-            if (data.error === 'invalid_funnel' || data.error === 'blocked_ua' || data.error === 'rate_limited') {
+            if (data.action === 'reset' || data.error === 'invalid_funnel' || data.error === 'blocked_ua' || data.error === 'rate_limited') {
                 showError('Session invalid. Restarting...');
-                await hardReset();
+                hardReset('funnel_bad');
                 return;
             }
             showError(data.error || 'Session error.');
@@ -496,10 +497,13 @@ async function claimKey() {
         const sData = await parseResponse(sRes);
 
         if (!sData.success || !sData.session) {
-            showError(sData.error || sData.details || 'session_failed');
+            const msg = sData.details
+                ? (sData.error + ': ' + sData.details)
+                : (sData.error || 'session_failed');
+            showError(msg);
             btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
             isClaiming = false;
-            await hardReset();
+            setTimeout(() => hardReset('session_fail'), 1500);
             return;
         }
         session = sData.session;
@@ -535,12 +539,15 @@ async function claimKey() {
             return;
         }
 
-        showError(data.error || data.details || 'claim_failed');
+        const msg = data.details
+            ? (data.error + ': ' + data.details)
+            : (data.error || 'claim_failed');
+        showError(msg);
         btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
 
-        if (data.action === 'reset' || /invalid_session|invalid_funnel|gates_incomplete|ua_mismatch|ip_mismatch/.test(data.error || '')) {
+        if (data.action === 'reset' || /invalid_session|invalid_funnel|gates_incomplete|ua_mismatch|ip_mismatch|server_error/.test(data.error || '')) {
             isClaiming = false;
-            await hardReset();
+            setTimeout(() => hardReset('claim_fail'), 1500);
             return;
         }
     } catch (err) {
@@ -600,7 +607,7 @@ async function adminClaim() {
         const data = await parseResponse(res);
 
         if (data.success && data.key) {
-            setStatus('Admin key created.');
+            setStatus('Admin key created (2h).');
             const kd = document.getElementById('keyDisplay');
             kd.style.display = 'block';
             kd.textContent = data.key;
