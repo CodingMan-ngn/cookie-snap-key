@@ -328,6 +328,19 @@ function goToOffer() {
     window.location.href = WORKER_URL + '/funnel-goto';
 }
 
+async function hardReset() {
+    try { await fetch(WORKER_URL + '/reset', { credentials: 'include' }); } catch (e) {}
+    localStorage.removeItem('vortex_funnel');
+    funnelToken = '';
+    if (keyTimerInterval)  { clearInterval(keyTimerInterval);  keyTimerInterval = null; }
+    if (pageTimerInterval) { clearInterval(pageTimerInterval); pageTimerInterval = null; }
+    timersRunning = false;
+    keyTimerRemaining  = Math.floor(CLAIM_WINDOW_MS / 1000);
+    pageTimerRemaining = Math.floor(PAGE_WINDOW_MS / 1000);
+    window.history.replaceState(null, '', '/');
+    setTimeout(() => bootstrap(), 800);
+}
+
 async function bootstrap() {
     clearError();
     hideButtons();
@@ -350,8 +363,7 @@ async function bootstrap() {
             rate_limited: 'Too many attempts. Try again later.'
         };
         showError(map[err] || 'Restarting...');
-        window.history.replaceState(null, '', '/');
-        setTimeout(() => bootstrap(), 1500);
+        await hardReset();
         return;
     }
 
@@ -375,12 +387,28 @@ async function bootstrap() {
         const res = await fetchWithTimeout(`${WORKER_URL}/funnel`);
         const data = await parseResponse(res);
 
+        if (!res.ok) {
+            if (data && (data.error === 'invalid_funnel' || data.error === 'blocked_ua' || data.error === 'rate_limited')) {
+                showError('Session invalid. Restarting...');
+                await hardReset();
+                return;
+            }
+            showError('Server returned ' + res.status + '. Retrying...');
+            setTimeout(() => bootstrap(), 2000);
+            return;
+        }
+
         if (data.funnel) {
             funnelToken = data.funnel;
             localStorage.setItem('vortex_funnel', funnelToken);
         }
 
         if (!data.success) {
+            if (data.error === 'invalid_funnel' || data.error === 'blocked_ua' || data.error === 'rate_limited') {
+                showError('Session invalid. Restarting...');
+                await hardReset();
+                return;
+            }
             showError(data.error || 'Session error.');
             showGetKeyButton('🛒 Get Key');
             return;
@@ -464,18 +492,18 @@ async function claimKey() {
     clearError();
 
     try {
-        // 1. mint session
         const sRes = await fetchWithTimeout(`${WORKER_URL}/session`);
         const sData = await parseResponse(sRes);
+
         if (!sData.success || !sData.session) {
-            showError(sData.error || 'session_failed');
+            showError(sData.error || sData.details || 'session_failed');
             btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
             isClaiming = false;
+            await hardReset();
             return;
         }
         session = sData.session;
 
-        // 2. claim
         const res = await fetchWithTimeout(`${WORKER_URL}/claim`, {
             method: 'POST',
             headers: { 'X-Session': session, 'Content-Type': 'application/json' },
@@ -507,8 +535,14 @@ async function claimKey() {
             return;
         }
 
-        showError(data.error || data.details || 'Claim failed.');
+        showError(data.error || data.details || 'claim_failed');
         btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
+
+        if (data.action === 'reset' || /invalid_session|invalid_funnel|gates_incomplete|ua_mismatch|ip_mismatch/.test(data.error || '')) {
+            isClaiming = false;
+            await hardReset();
+            return;
+        }
     } catch (err) {
         showError('Network error: ' + (err.message || 'unknown'));
         btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original;
@@ -561,7 +595,7 @@ async function adminClaim() {
     btn.innerHTML = '<span class="spinner"></span> Generating...';
 
     try {
-        const url = `${WORKER_URL}/admin?hours=48&pw=${encodeURIComponent(adminLogin._pw || '')}&profile=Admin`;
+        const url = `${WORKER_URL}/admin?hours=2&pw=${encodeURIComponent(adminLogin._pw || '')}&profile=Admin`;
         const res = await fetchWithTimeout(url);
         const data = await parseResponse(res);
 
