@@ -10,347 +10,85 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: 'Poppins', sans-serif;
-    background: #0a0e1a; color: #fff;
-    min-height: 100vh; display: flex;
-    align-items: center; justify-content: center;
-    overflow: hidden; position: relative;
-}
-body::before {
-    content: ""; position: fixed; inset: 0;
-    background: url('vortex-bg.png') center center / cover no-repeat;
-    filter: brightness(0.5) blur(3px); z-index: -2;
-}
-body::after {
-    content: ""; position: fixed; inset: 0;
-    background: radial-gradient(circle at 50% 50%, rgba(10,14,26,0.6), rgba(10,14,26,0.9));
-    z-index: -1;
-}
-.vortex-card {
-    max-width: 420px; width: 90%;
-    background: rgba(15, 22, 38, 0.85);
-    border: 1px solid rgba(96, 165, 250, 0.3);
-    border-radius: 24px; padding: 30px 24px;
-    box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1);
-    text-align: center; position: relative;
-    backdrop-filter: blur(12px);
-    animation: cardGlow 4s ease-in-out infinite;
-}
-.vortex-card.admin-mode {
-    border-color: rgba(34, 197, 94, 0.5);
-    box-shadow: 0 0 40px rgba(34, 197, 94, 0.3), inset 0 0 20px rgba(34, 197, 94, 0.1);
-}
-.vortex-logo {
-    display: inline-block; margin-bottom: 8px;
-    filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.6));
-    cursor: pointer; user-select: none;
-}
-.logo-text {
-    font-family: 'Orbitron', sans-serif; font-size: 32px;
-    font-weight: 900;
-    background: linear-gradient(135deg, #60a5fa, #3b82f6, #22d3ee);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    letter-spacing: 4px;
-}
-.vortex-subtitle {
-    font-size: 14px; color: #a3b1c6;
-    margin-bottom: 16px; letter-spacing: 1px;
-}
+body { font-family: 'Poppins', sans-serif; background: #0a0e1a; color: #fff; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+body::before { content: ""; position: fixed; inset: 0; background: url('vortex-bg.png') center center / cover no-repeat; filter: brightness(0.5) blur(3px); z-index: -2; }
+body::after { content: ""; position: fixed; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(10,14,26,0.6), rgba(10,14,26,0.9)); z-index: -1; }
+.vortex-card { max-width: 420px; width: 90%; background: rgba(15, 22, 38, 0.85); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 24px; padding: 30px 24px; box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1); text-align: center; position: relative; backdrop-filter: blur(12px); animation: cardGlow 4s ease-in-out infinite; }
+.vortex-card.admin-mode { border-color: rgba(34, 197, 94, 0.5); box-shadow: 0 0 40px rgba(34, 197, 94, 0.3), inset 0 0 20px rgba(34, 197, 94, 0.1); }
+.vortex-logo { display: inline-block; margin-bottom: 8px; filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.6)); cursor: pointer; user-select: none; }
+.logo-text { font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; background: linear-gradient(135deg, #60a5fa, #3b82f6, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 4px; }
+.vortex-subtitle { font-size: 14px; color: #a3b1c6; margin-bottom: 16px; letter-spacing: 1px; }
 .checkpoints { display: flex; justify-content: center; gap: 10px; margin: 0 0 16px; }
-.cp-chip {
-    flex: 1; padding: 10px 12px;
-    border-radius: 12px;
-    background: rgba(0,0,0,0.4);
-    border: 1px solid rgba(96,165,250,0.2);
-    font-size: 11px; text-transform: uppercase;
-    letter-spacing: 1px; color: #7f8ea3;
-    transition: all 0.3s;
-    display: flex; align-items: center; justify-content: center;
-    gap: 8px;
-}
-.cp-chip .dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #3a4050; flex-shrink: 0;
-}
-.cp-chip.active {
-    border-color: rgba(251,191,36,0.5);
-    color: #fbbf24;
-    background: rgba(251,191,36,0.08);
-}
+.cp-chip { flex: 1; padding: 10px 12px; border-radius: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(96,165,250,0.2); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #7f8ea3; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.cp-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #3a4050; flex-shrink: 0; }
+.cp-chip.active { border-color: rgba(251,191,36,0.5); color: #fbbf24; background: rgba(251,191,36,0.08); }
 .cp-chip.active .dot { background: #fbbf24; animation: pulse 1.2s infinite; }
-.cp-chip.done {
-    border-color: rgba(34,197,94,0.5);
-    color: #22c55e;
-    background: rgba(34,197,94,0.08);
-}
+.cp-chip.done { border-color: rgba(34,197,94,0.5); color: #22c55e; background: rgba(34,197,94,0.08); }
 .cp-chip.done .dot { background: #22c55e; }
-
 .timer-row { display: flex; justify-content: center; gap: 12px; margin: 12px 0; }
-.timer-box {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(96, 165, 250, 0.3);
-    border-radius: 12px; padding: 10px 14px;
-    flex: 1; min-width: 120px;
-}
-.timer-label {
-    font-size: 10px; color: #a3b1c6;
-    text-transform: uppercase; letter-spacing: 1px;
-    margin-bottom: 4px;
-}
-.timer-value {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 20px; font-weight: 700; color: #60a5fa;
-}
+.timer-box { background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 12px; padding: 10px 14px; flex: 1; min-width: 120px; }
+.timer-label { font-size: 10px; color: #a3b1c6; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.timer-value { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: #60a5fa; }
 .timer-value.warning { color: #ff6b6b; animation: pulse 1s infinite; }
-.btn-claim {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 15px; font-weight: 700;
-    background: linear-gradient(135deg, #60a5fa, #3b82f6);
-    color: #000; border: none; border-radius: 50px;
-    padding: 14px 32px; cursor: pointer;
-    margin-top: 16px; width: 100%;
-    transition: transform 0.2s, box-shadow 0.2s;
-    display: flex; align-items: center; justify-content: center;
-    gap: 8px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-}
+.btn-claim { font-family: 'Orbitron', sans-serif; font-size: 15px; font-weight: 700; background: linear-gradient(135deg, #60a5fa, #3b82f6); color: #000; border: none; border-radius: 50px; padding: 14px 32px; cursor: pointer; margin-top: 16px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
 .btn-claim:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5); }
 .btn-claim:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-claim.loading { opacity: 0.8; pointer-events: none; }
-.btn-admin {
-    background: linear-gradient(135deg, #22c55e, #16a34a);
-    margin-top: 8px;
-    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
-}
-.key-display {
-    display: none; margin-top: 20px;
-    padding: 15px; background: rgba(0, 0, 0, 0.6);
-    border-radius: 12px; border: 1px solid #3b82f6;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 18px; color: #60a5fa;
-    word-break: break-all; letter-spacing: 1px;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
-    cursor: pointer;
-    position: relative;
-}
-.key-display::after {
-    content: "click to copy";
-    display: block;
-    margin-top: 8px;
-    font-size: 10px;
-    color: #7f8ea3;
-    font-family: 'Poppins', sans-serif;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-weight: 400;
-}
-.key-display.copied::after { content: "✓ copied"; color: #22c55e; }
-.disclaimer {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: rgba(251, 191, 36, 0.08);
-    border: 1px solid rgba(251, 191, 36, 0.35);
-    border-radius: 12px;
-    font-size: 12px; line-height: 1.6;
-    color: #fbbf24;
-    text-align: left;
-    display: none;
-}
+.btn-admin { background: linear-gradient(135deg, #22c55e, #16a34a); margin-top: 8px; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); }
+.key-display { display: none; margin-top: 20px; padding: 15px; background: rgba(0, 0, 0, 0.6); border-radius: 12px; border: 1px solid #3b82f6; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: #60a5fa; word-break: break-all; letter-spacing: 1px; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); cursor: pointer; }
+.disclaimer { margin-top: 16px; padding: 12px 16px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.35); border-radius: 12px; font-size: 12px; line-height: 1.6; color: #fbbf24; text-align: left; display: none; }
 .disclaimer strong { color: #f59e0b; display: block; margin-bottom: 6px; font-size: 13px; }
-.disclaimer .timer-inline {
-    font-family: 'JetBrains Mono', monospace;
-    color: #fff; background: rgba(0,0,0,0.4);
-    padding: 1px 6px; border-radius: 4px; font-size: 11px;
-}
 .status-msg { font-size: 13px; margin-top: 12px; color: #a3b1c6; }
-.error-msg {
-    font-size: 12px; margin-top: 12px; color: #ff6b6b;
-    min-height: 18px; line-height: 1.5;
-    word-break: break-word; text-align: left; padding: 0 4px;
-}
-.error-msg:not(:empty) {
-    background: rgba(255, 107, 107, 0.08);
-    border: 1px solid rgba(255, 107, 107, 0.3);
-    border-radius: 8px; padding: 10px 12px;
-}
-.error-msg .err-tag {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; color: #ff9090;
-    text-transform: uppercase; letter-spacing: 1px;
-    display: block; margin-bottom: 4px;
-}
-.retry-btn {
-    display: inline-block; background: transparent;
-    border: 1px solid #3b82f6; color: #60a5fa;
-    padding: 8px 20px; border-radius: 50px;
-    cursor: pointer; font-family: 'Orbitron', sans-serif;
-    font-size: 12px; font-weight: 700; letter-spacing: 1px;
-    transition: background 0.2s; width: 100%; margin-top: 12px;
-}
+.error-msg { font-size: 12px; margin-top: 12px; color: #ff6b6b; min-height: 18px; line-height: 1.5; word-break: break-word; text-align: left; padding: 0 4px; }
+.error-msg:not(:empty) { background: rgba(255, 107, 107, 0.08); border: 1px solid rgba(255, 107, 107, 0.3); border-radius: 8px; padding: 10px 12px; }
+.error-msg .err-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #ff9090; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+.retry-btn { display: inline-block; background: transparent; border: 1px solid #3b82f6; color: #60a5fa; padding: 8px 20px; border-radius: 50px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px; transition: background 0.2s; width: 100%; margin-top: 12px; }
 .retry-btn:hover { background: rgba(59, 130, 246, 0.15); }
-.redirect-msg {
-    display: none; margin-top: 14px; padding: 12px 14px;
-    background: rgba(34, 197, 94, 0.08);
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    border-radius: 12px; font-size: 12px;
-    color: #22c55e; text-align: center;
-    letter-spacing: 0.5px; line-height: 1.6;
-}
-.redirect-msg.show { display: block; }
-.redirect-msg .countdown {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 15px; font-weight: 700; color: #22c55e;
-}
-.dev-prompt {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0, 0, 0, 0.92); z-index: 99999;
-    align-items: center; justify-content: center; padding: 20px;
-}
-.dev-prompt.show { display: flex; }
-.dev-prompt-box {
-    background: linear-gradient(160deg, #0f172a, #0b1220);
-    border: 1px solid rgba(96, 165, 250, 0.3);
-    border-radius: 20px; padding: 28px 24px;
-    max-width: 360px; width: 100%; text-align: center;
-    box-shadow: 0 0 60px rgba(59, 130, 246, 0.2);
-}
-.dev-prompt-box h3 {
-    font-family: 'Orbitron', sans-serif; font-size: 16px;
-    color: #60a5fa; margin-bottom: 8px; letter-spacing: 2px;
-}
-.dev-prompt-box p {
-    font-size: 12px; color: #7f8ea3;
-    margin-bottom: 20px; line-height: 1.6;
-}
-.dev-prompt-box input {
-    width: 100%; padding: 12px 16px;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(96, 165, 250, 0.3);
-    border-radius: 10px; color: #fff;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px; text-align: center; letter-spacing: 2px;
-    outline: none; transition: border-color 0.2s; margin-bottom: 14px;
-}
-.dev-prompt-box input:focus {
-    border-color: #60a5fa;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
-}
-.dev-prompt-box .btn-row { display: flex; gap: 8px; }
-.dev-prompt-box button {
-    flex: 1; padding: 10px; border-radius: 10px;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 12px; font-weight: 700; letter-spacing: 1px;
-    cursor: pointer; transition: all 0.2s; border: none;
-}
-.dev-prompt-box .btn-confirm {
-    background: linear-gradient(135deg, #60a5fa, #3b82f6); color: #000;
-}
-.dev-prompt-box .btn-confirm:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-}
-.dev-prompt-box .btn-cancel {
-    background: transparent;
-    border: 1px solid rgba(96, 165, 250, 0.3);
-    color: #7f8ea3;
-}
-.dev-prompt-box .btn-cancel:hover { border-color: #60a5fa; color: #60a5fa; }
-.dev-prompt-box .err {
-    font-size: 11px; color: #ff6b6b;
-    margin-top: 10px; min-height: 14px;
-}
 
-/* ============================================
-   Discord prompt — shown on direct visits
-   ============================================ */
-.discord-prompt {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0, 0, 0, 0.92); z-index: 99998;
-    align-items: center; justify-content: center; padding: 20px;
-    overflow-y: auto;
-}
+/* Success screen — after funnel completes */
+.success-screen { display: none; padding: 16px 0 8px; text-align: center; }
+.success-screen.show { display: block; }
+.success-check { font-size: 56px; color: #22c55e; margin-bottom: 8px; filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.5)); }
+.success-title { font-family: 'Orbitron', sans-serif; font-size: 17px; font-weight: 700; color: #22c55e; letter-spacing: 2px; margin-bottom: 14px; }
+.success-desc { font-size: 14px; color: #cbd5e1; line-height: 1.7; margin-bottom: 20px; }
+.success-desc code { font-family: 'JetBrains Mono', monospace; background: rgba(88, 101, 242, 0.2); color: #8b95ff; padding: 3px 10px; border-radius: 6px; font-size: 13px; font-weight: 600; }
+.btn-open-discord { display: flex; align-items: center; justify-content: center; width: 100%; padding: 14px 20px; background: linear-gradient(135deg, #5865F2, #4752c4); color: #fff; border-radius: 12px; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4); border: none; cursor: pointer; margin-top: 8px; }
+.btn-open-discord:hover { transform: translateY(-2px); box-shadow: 0 6px 26px rgba(88, 101, 242, 0.55); }
+
+/* Direct-visit Discord prompt */
+.discord-prompt { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); z-index: 99998; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
 .discord-prompt.show { display: flex; }
-.discord-prompt-box {
-    background: linear-gradient(160deg, #0f172a, #0b1220);
-    border: 1px solid rgba(88, 101, 242, 0.4);
-    border-radius: 20px; padding: 32px 26px;
-    max-width: 440px; width: 100%; text-align: center;
-    box-shadow: 0 0 60px rgba(88, 101, 242, 0.25), inset 0 0 20px rgba(88, 101, 242, 0.08);
-    animation: cardGlow 4s ease-in-out infinite;
-}
+.discord-prompt-box { background: linear-gradient(160deg, #0f172a, #0b1220); border: 1px solid rgba(88, 101, 242, 0.4); border-radius: 20px; padding: 32px 26px; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 0 60px rgba(88, 101, 242, 0.25), inset 0 0 20px rgba(88, 101, 242, 0.08); animation: cardGlow 4s ease-in-out infinite; }
 .discord-icon { margin-bottom: 16px; filter: drop-shadow(0 0 12px rgba(88, 101, 242, 0.6)); }
-.discord-title {
-    font-family: 'Orbitron', sans-serif; font-size: 20px;
-    color: #fff; letter-spacing: 2px; margin-bottom: 10px;
-}
-.discord-desc {
-    font-size: 13px; color: #a3b1c6; line-height: 1.6;
-    margin-bottom: 22px;
-}
-.discord-desc code {
-    font-family: 'JetBrains Mono', monospace;
-    background: rgba(88, 101, 242, 0.15);
-    color: #8b95ff; padding: 2px 8px;
-    border-radius: 6px; font-size: 12px;
-}
-.discord-steps {
-    display: flex; flex-direction: column; gap: 10px;
-    margin-bottom: 24px; text-align: left;
-}
-.discord-step {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 14px; background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(96, 165, 250, 0.15);
-    border-radius: 12px;
-}
-.step-num {
-    flex-shrink: 0; width: 24px; height: 24px;
-    border-radius: 50%; background: rgba(88, 101, 242, 0.2);
-    color: #8b95ff; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-family: 'Orbitron', sans-serif;
-}
+.discord-title { font-family: 'Orbitron', sans-serif; font-size: 20px; color: #fff; letter-spacing: 2px; margin-bottom: 10px; }
+.discord-desc { font-size: 13px; color: #a3b1c6; line-height: 1.6; margin-bottom: 22px; }
+.discord-desc code { font-family: 'JetBrains Mono', monospace; background: rgba(88, 101, 242, 0.15); color: #8b95ff; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
+.discord-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; text-align: left; }
+.discord-step { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(96, 165, 250, 0.15); border-radius: 12px; }
+.step-num { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: rgba(88, 101, 242, 0.2); color: #8b95ff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 12px; font-family: 'Orbitron', sans-serif; }
 .step-text { font-size: 12.5px; color: #cbd5e1; line-height: 1.4; }
-.step-text code {
-    font-family: 'JetBrains Mono', monospace;
-    background: rgba(88, 101, 242, 0.15);
-    color: #8b95ff; padding: 1px 6px;
-    border-radius: 4px; font-size: 11.5px;
-}
-.btn-discord {
-    display: flex; align-items: center; justify-content: center;
-    width: 100%; padding: 14px 20px; margin-bottom: 10px;
-    background: linear-gradient(135deg, #5865F2, #4752c4);
-    color: #fff; border-radius: 12px;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 13px; font-weight: 700; letter-spacing: 1px;
-    text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4);
-}
-.btn-discord:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 26px rgba(88, 101, 242, 0.55);
-}
-.btn-discord-secondary {
-    display: inline-block; font-size: 11.5px;
-    color: #7f8ea3; text-decoration: none;
-    transition: color 0.2s; margin-top: 4px;
-}
-.btn-discord-secondary:hover { color: #8b95ff; }
+.step-text code { font-family: 'JetBrains Mono', monospace; background: rgba(88, 101, 242, 0.15); color: #8b95ff; padding: 1px 6px; border-radius: 4px; font-size: 11.5px; }
+.btn-discord { display: flex; align-items: center; justify-content: center; width: 100%; padding: 14px 20px; margin-bottom: 10px; background: linear-gradient(135deg, #5865F2, #4752c4); color: #fff; border-radius: 12px; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4); }
+.btn-discord:hover { transform: translateY(-2px); box-shadow: 0 6px 26px rgba(88, 101, 242, 0.55); }
 
-.spinner {
-    display: inline-block; width: 14px; height: 14px;
-    border: 2px solid rgba(0, 0, 0, 0.3);
-    border-top-color: #000; border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-}
+/* Dev prompt */
+.dev-prompt { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); z-index: 99999; align-items: center; justify-content: center; padding: 20px; }
+.dev-prompt.show { display: flex; }
+.dev-prompt-box { background: linear-gradient(160deg, #0f172a, #0b1220); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 20px; padding: 28px 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 0 60px rgba(59, 130, 246, 0.2); }
+.dev-prompt-box h3 { font-family: 'Orbitron', sans-serif; font-size: 16px; color: #60a5fa; margin-bottom: 8px; letter-spacing: 2px; }
+.dev-prompt-box p { font-size: 12px; color: #7f8ea3; margin-bottom: 20px; line-height: 1.6; }
+.dev-prompt-box input { width: 100%; padding: 12px 16px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 10px; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 14px; text-align: center; letter-spacing: 2px; outline: none; transition: border-color 0.2s; margin-bottom: 14px; }
+.dev-prompt-box input:focus { border-color: #60a5fa; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+.dev-prompt-box .btn-row { display: flex; gap: 8px; }
+.dev-prompt-box button { flex: 1; padding: 10px; border-radius: 10px; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; border: none; }
+.dev-prompt-box .btn-confirm { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: #000; }
+.dev-prompt-box .btn-cancel { background: transparent; border: 1px solid rgba(96, 165, 250, 0.3); color: #7f8ea3; }
+.dev-prompt-box .err { font-size: 11px; color: #ff6b6b; margin-top: 10px; min-height: 14px; }
+
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0, 0, 0, 0.3); border-top-color: #000; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes cardGlow {
-    0%,100% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1); }
-    50% { box-shadow: 0 0 60px rgba(59, 130, 246, 0.5), inset 0 0 30px rgba(59, 130, 246, 0.2); }
-}
+@keyframes cardGlow { 0%,100% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1); } 50% { box-shadow: 0 0 60px rgba(59, 130, 246, 0.5), inset 0 0 30px rgba(59, 130, 246, 0.2); } }
 </style>
 </head>
 <body>
@@ -370,29 +108,39 @@ body::after {
     </div>
     <div class="logo-text">VORTEX</div>
     <div class="vortex-subtitle">Secure Key Claim</div>
-    <div class="checkpoints">
-        <div class="cp-chip" id="cp1"><span class="dot"></span><span id="cp1-label">Checkpoint 1/2</span></div>
-        <div class="cp-chip" id="cp2"><span class="dot"></span><span id="cp2-label">Checkpoint 2/2</span></div>
+
+    <div id="funnelArea">
+        <div class="checkpoints">
+            <div class="cp-chip" id="cp1"><span class="dot"></span><span id="cp1-label">Checkpoint 1/2</span></div>
+            <div class="cp-chip" id="cp2"><span class="dot"></span><span id="cp2-label">Checkpoint 2/2</span></div>
+        </div>
+        <div class="timer-row">
+            <div class="timer-box"><div class="timer-label">Key Expires In</div><div class="timer-value" id="keyTimer">10:00</div></div>
+            <div class="timer-box"><div class="timer-label">Page Closes In</div><div class="timer-value" id="pageTimer">5:00</div></div>
+        </div>
+        <div class="status-msg" id="status">Loading...</div>
+        <button class="btn-claim" id="getKeyBtn" style="display:none;">🔑 Get Key</button>
+        <button class="btn-claim" id="claimBtn" style="display:none;">⚡ Generate Key</button>
+        <button class="btn-claim btn-admin" id="adminClaimBtn" style="display:none;">🔓 Admin Get Key</button>
+        <div class="error-msg" id="errorMsg"></div>
     </div>
-    <div class="timer-row">
-        <div class="timer-box"><div class="timer-label">Key Expires In</div><div class="timer-value" id="keyTimer">10:00</div></div>
-        <div class="timer-box"><div class="timer-label">Page Closes In</div><div class="timer-value" id="pageTimer">1:00</div></div>
+
+    <div class="success-screen" id="successScreen">
+        <div class="success-check">✓</div>
+        <div class="success-title">VERIFICATION COMPLETE</div>
+        <div class="success-desc">
+            Your key is ready.<br>
+            Run <code>/claim</code> on Discord<br>
+            to receive it in your DMs.
+        </div>
+        <button class="btn-open-discord" id="openDiscordBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px;vertical-align:middle;">
+                <path d="M20.317 4.37a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.3 12.3 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+            </svg>
+            Open Discord
+        </button>
     </div>
-    <div class="status-msg" id="status">Loading...</div>
-    <button class="btn-claim" id="getKeyBtn" style="display:none;">🛒 Get Key</button>
-    <button class="btn-claim" id="claimBtn" style="display:none;">⚡ Generate Key</button>
-    <button class="btn-claim btn-admin" id="adminClaimBtn" style="display:none;">🔓 Admin Get Key</button>
-    <div class="key-display" id="keyDisplay"></div>
-    <div class="disclaimer" id="disclaimer">
-        <strong>⚠️ Key lasts 2 days</strong>
-        Valid for <span class="timer-inline">2 days (48 hours)</span> from activation.<br>
-        Activate within <span class="timer-inline">10 minutes</span> of generating or it expires.<br>
-        Not recoverable if lost. Copy now.
-    </div>
-    <div class="redirect-msg" id="redirectMsg">
-        Redirecting to VORTEX in <span class="countdown" id="countdown">8</span>s
-    </div>
-    <div class="error-msg" id="errorMsg"></div>
+
     <div class="status-msg" id="adminStatus"></div>
 </div>
 
@@ -409,27 +157,15 @@ body::after {
             Join the server, then use the <code>/claim</code> command to receive your key in DMs.
         </p>
         <div class="discord-steps">
-            <div class="discord-step">
-                <span class="step-num">1</span>
-                <span class="step-text">Join the Discord server</span>
-            </div>
-            <div class="discord-step">
-                <span class="step-num">2</span>
-                <span class="step-text">Type <code>/claim</code> in any channel</span>
-            </div>
-            <div class="discord-step">
-                <span class="step-num">3</span>
-                <span class="step-text">Complete the funnel, receive your key in DMs</span>
-            </div>
+            <div class="discord-step"><span class="step-num">1</span><span class="step-text">Join the Discord server</span></div>
+            <div class="discord-step"><span class="step-num">2</span><span class="step-text">Type <code>/claim</code> in any channel</span></div>
+            <div class="discord-step"><span class="step-num">3</span><span class="step-text">Complete the funnel, then run <code>/claim</code> again</span></div>
         </div>
         <a class="btn-discord" id="discordInviteBtn" href="https://discord.gg/AABUzpzdU5" target="_blank" rel="noopener">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px;vertical-align:middle;">
                 <path d="M20.317 4.37a19.79 19.79 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.3 12.3 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
             </svg>
             Join Discord Server
-        </a>
-        <a class="btn-discord-secondary" id="discordDmBtn" href="https://discord.com/channels/@me" target="_blank" rel="noopener">
-            Already in the server? Open your DMs →
         </a>
     </div>
 </div>
@@ -451,16 +187,15 @@ body::after {
 (function() {
 'use strict';
 
-const WORKER_URL   = 'https://cookie-snap-keys.j26064135.workers.dev';
-const RETURN_URL   = 'https://cookie-snap-key.pages.dev/';
+const WORKER_URL     = 'https://cookie-snap-keys.j26064135.workers.dev';
+const RETURN_URL     = 'https://cookie-snap-key.pages.dev/';
 const DISCORD_INVITE = 'https://discord.gg/AABUzpzdU5';
-const DISCORD_DMS  = 'https://discord.com/channels/@me';
+const DISCORD_DMS    = 'https://discord.com/channels/@me';
 
 const FETCH_TIMEOUT    = 15000;
 const CLAIM_WINDOW_MS  = 600000;
-const PAGE_WINDOW_MS   = 60000;
+const PAGE_WINDOW_MS   = 5 * 60 * 1000;
 const AUTO_CLAIM_DELAY = 800;
-const REDIRECT_DELAY   = 8;
 
 const DEV_PASSWORD = 'invisible';
 const DEV_FLAG_KEY = 'vortex_dev_unlocked';
@@ -518,7 +253,6 @@ let session = null;
 let adminMode = false;
 let keyTimerInterval = null;
 let pageTimerInterval = null;
-let redirectInterval = null;
 let keyTimerRemaining = Math.floor(CLAIM_WINDOW_MS / 1000);
 let pageTimerRemaining = Math.floor(PAGE_WINDOW_MS / 1000);
 let isClaiming = false;
@@ -528,38 +262,25 @@ let funnelToken = localStorage.getItem('vortex_funnel') || '';
 let discordMode = sessionStorage.getItem('vortex_discord_mode') === '1';
 
 function getParams() { return new URLSearchParams(window.location.search); }
-
-function formatTime(s) {
-    if (s < 0) s = 0;
-    const m = Math.floor(s / 60), x = s % 60;
-    return `${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`;
-}
+function formatTime(s) { if (s < 0) s = 0; const m = Math.floor(s / 60), x = s % 60; return `${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`; }
 
 async function workerFetch(url, options = {}) {
     const headers = Object.assign({}, options.headers || {});
     if (funnelToken) headers['X-Funnel'] = funnelToken;
     return fetch(url, { ...options, headers, credentials: 'include', cache: 'no-store' });
 }
-
 async function fetchWithTimeout(url, options = {}) {
     const ctrl = new AbortController();
     const id = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT);
-    try {
-        const r = await workerFetch(url, { ...options, signal: ctrl.signal });
-        clearTimeout(id);
-        return r;
-    } catch (err) { clearTimeout(id); throw err; }
+    try { const r = await workerFetch(url, { ...options, signal: ctrl.signal }); clearTimeout(id); return r; }
+    catch (err) { clearTimeout(id); throw err; }
 }
-
 async function parseResponse(res) {
     try { return await res.json(); } catch { return { error: `http_${res.status}` }; }
 }
 
 function setStatus(t) { document.getElementById('status').textContent = t; }
-function clearError() {
-    const e = document.getElementById('errorMsg');
-    e.textContent = ''; e.innerHTML = '';
-}
+function clearError() { const e = document.getElementById('errorMsg'); e.textContent = ''; e.innerHTML = ''; }
 function showError(title, detail) {
     const e = document.getElementById('errorMsg');
     e.innerHTML = '';
@@ -572,21 +293,15 @@ function showError(title, detail) {
 function showRetryButton(onClick) {
     const e = document.getElementById('errorMsg');
     const b = document.createElement('button');
-    b.className = 'retry-btn';
-    b.textContent = '▶ RETRY';
-    b.onclick = onClick;
+    b.className = 'retry-btn'; b.textContent = '▶ RETRY'; b.onclick = onClick;
     e.appendChild(b);
 }
 function hideButtons() {
-    ['claimBtn', 'getKeyBtn', 'adminClaimBtn'].forEach(id => {
-        document.getElementById(id).style.display = 'none';
-    });
+    ['claimBtn', 'getKeyBtn', 'adminClaimBtn'].forEach(id => { document.getElementById(id).style.display = 'none'; });
 }
 function setCheckpoints(cp1Done, cp2Done) {
-    const c1 = document.getElementById('cp1');
-    const c2 = document.getElementById('cp2');
-    const l1 = document.getElementById('cp1-label');
-    const l2 = document.getElementById('cp2-label');
+    const c1 = document.getElementById('cp1'), c2 = document.getElementById('cp2');
+    const l1 = document.getElementById('cp1-label'), l2 = document.getElementById('cp2-label');
     c1.classList.remove('active', 'done'); c2.classList.remove('active', 'done');
     if (cp1Done) { c1.classList.add('done'); l1.textContent = 'Checkpoint 1/2 ✓'; }
     else { c1.classList.add('active'); l1.textContent = 'Checkpoint 1/2'; }
@@ -595,9 +310,7 @@ function setCheckpoints(cp1Done, cp2Done) {
     else { l2.textContent = 'Checkpoint 2/2'; }
 }
 
-function goToOffer() {
-    window.location.href = WORKER_URL + '/funnel-goto';
-}
+function goToOffer() { window.location.href = WORKER_URL + '/funnel-goto'; }
 function hardReset() {
     localStorage.removeItem('vortex_funnel');
     sessionStorage.removeItem('vortex_discord_mode');
@@ -607,87 +320,61 @@ function hardReset() {
     setTimeout(() => { window.location.replace(window.location.pathname); }, 400);
 }
 
-function showDiscordRedirect() {
+function showSuccessScreen() {
     stopTimers();
     hideButtons();
-    setStatus('✓ Key sent to your Discord DMs!');
-    const kd = document.getElementById('keyDisplay');
-    kd.style.display = 'none';
-    kd.textContent = '';
-    document.getElementById('disclaimer').style.display = 'none';
-
-    const banner = document.getElementById('redirectMsg');
-    banner.classList.add('show');
-    banner.innerHTML = 'Opening Discord in <span class="countdown" id="countdown">5</span>s — check your DMs';
-
+    clearError();
+    document.getElementById('funnelArea').style.display = 'none';
+    document.getElementById('successScreen').classList.add('show');
+    document.getElementById('openDiscordBtn').onclick = () => { window.location.href = DISCORD_DMS; };
     sessionStorage.removeItem('vortex_discord_mode');
     localStorage.removeItem('vortex_funnel');
     try { fetch(WORKER_URL + '/reset', { credentials: 'include' }).catch(() => {}); } catch (e) {}
-
-    let n = 5;
-    const cdEl = document.getElementById('countdown');
-    if (redirectInterval) clearInterval(redirectInterval);
-    redirectInterval = setInterval(() => {
-        n--;
-        if (cdEl) cdEl.textContent = String(Math.max(0, n));
-        if (n <= 0) {
-            clearInterval(redirectInterval); redirectInterval = null;
-            window.location.replace(DISCORD_DMS);
-        }
-    }, 1000);
 }
 
 async function bootstrap() {
     clearError();
     hideButtons();
-    document.getElementById('keyDisplay').style.display = 'none';
-    document.getElementById('keyDisplay').textContent = '';
-    document.getElementById('keyDisplay').classList.remove('copied');
-    document.getElementById('disclaimer').style.display = 'none';
-    document.getElementById('redirectMsg').classList.remove('show');
+    document.getElementById('funnelArea').style.display = 'block';
+    document.getElementById('successScreen').classList.remove('show');
     autoClaimScheduled = false;
     setCheckpoints(false, false);
 
     if (adminMode) { setStatus('Admin mode active.'); return; }
 
     const params = getParams();
-
     const dtParam = params.get('dt') || '';
     if (dtParam) {
         discordMode = true;
         sessionStorage.setItem('vortex_discord_mode', '1');
     }
 
-    // Direct visit — no dt, no cp=return, no funnel stored, no errors/steps
     const hasFunnel    = !!localStorage.getItem('vortex_funnel');
     const isReturning  = params.get('cp') === 'return';
     const hasError     = !!params.get('error');
     const hasStep      = !!params.get('step');
-    const hasVerified  = params.get('verified') === '1';
-    if (!dtParam && !hasFunnel && !isReturning && !hasError && !hasStep && !hasVerified && !discordMode) {
+    if (!dtParam && !hasFunnel && !isReturning && !hasError && !hasStep && !discordMode) {
         document.getElementById('discordPrompt').classList.add('show');
         document.getElementById('discordInviteBtn').href = DISCORD_INVITE;
-        document.getElementById('discordDmBtn').href = DISCORD_DMS;
         return;
     }
 
-    if (params.get('cp') === 'return') {
+    if (isReturning) {
         window.history.replaceState(null, '', '/');
-
         if (!funnelToken) {
-            showError('no_funnel', 'Session missing. Starting over...');
+            showError('no_funnel', 'Session missing. Restarting...');
             setTimeout(hardReset, 1500);
             return;
         }
-
-        setStatus('Verifying checkpoint...');
+        setStatus('Verifying...');
         try {
             const rr = await fetchWithTimeout(`${WORKER_URL}/gate-recover`, { method: 'POST' });
             const rd = await parseResponse(rr);
 
             if (rd.success) {
-                if (rd.discordClaimed || discordMode) {
-                    showDiscordRedirect();
+                if (rd.gate2Done || rd.discordClaimed) {
+                    // Both gates done → success screen
+                    showSuccessScreen();
                     return;
                 }
                 setTimeout(() => bootstrap(), 300);
@@ -699,36 +386,29 @@ async function bootstrap() {
                 let n = wait;
                 const tick = setInterval(() => {
                     n--;
-                    if (n <= 0) {
-                        clearInterval(tick);
-                        bootstrap();
-                    } else {
-                        showError('too_fast', `Complete the offer first. Retrying in ${n}s...`);
-                    }
+                    if (n <= 0) { clearInterval(tick); bootstrap(); }
+                    else showError('too_fast', `Complete the offer first. Retrying in ${n}s...`);
                 }, 1000);
                 return;
             }
-            if (rd.error === 'skip_detected' || rd.error === 'invalid_funnel' || rd.action === 'reset') {
+            if (rd.error === 'skip_detected' || rd.error === 'invalid_funnel' || rd.action === 'reset' || rd.error === 'too_slow') {
                 showError(rd.error, 'Restarting clean...');
                 setTimeout(hardReset, 1500);
                 return;
             }
             showError(rd.error || 'recover_failed', 'Retrying...');
             setTimeout(() => bootstrap(), 1500);
-            return;
         } catch (e) {
             showError('network', 'Recovery failed. Retrying...');
             setTimeout(() => bootstrap(), 1500);
-            return;
         }
+        return;
     }
 
     const err = params.get('error');
     if (err) {
         const map = {
             no_funnel: 'Session missing. Restarting...',
-            funnel_expired: 'Session expired. Restarting...',
-            funnel_corrupt: 'Session invalid. Restarting...',
             skip_detected: 'Complete checkpoint 1 first. Restarting...',
             too_fast: 'Offer not completed. Try again.',
             blocked_ua: 'Access denied.',
@@ -742,18 +422,13 @@ async function bootstrap() {
     if (params.get('step') === '2') {
         setCheckpoints(true, false);
         setStatus('Checkpoint 1/2 complete. Starting checkpoint 2/2...');
-        const b = document.getElementById('getKeyBtn');
-        b.style.display = 'flex';
-        b.textContent = '▶ Start Checkpoint 2/2';
-        b.onclick = goToOffer;
+        showGetKeyButton('🔑 Get Key (2/2)');
         window.history.replaceState(null, '', '/');
         setTimeout(goToOffer, 2000);
         return;
     }
 
-    if (params.toString()) {
-        window.history.replaceState(null, '', '/');
-    }
+    if (params.toString()) window.history.replaceState(null, '', '/');
 
     setStatus('Loading...');
     try {
@@ -774,15 +449,8 @@ async function bootstrap() {
             return;
         }
 
-        if (data.funnel) {
-            funnelToken = data.funnel;
-            localStorage.setItem('vortex_funnel', funnelToken);
-        }
-
-        if (data.discord) {
-            discordMode = true;
-            sessionStorage.setItem('vortex_discord_mode', '1');
-        }
+        if (data.funnel) { funnelToken = data.funnel; localStorage.setItem('vortex_funnel', funnelToken); }
+        if (data.discord) { discordMode = true; sessionStorage.setItem('vortex_discord_mode', '1'); }
 
         if (!data.success) {
             if (data.action === 'reset') {
@@ -791,36 +459,26 @@ async function bootstrap() {
                 return;
             }
             showError(data.error || 'funnel_failed', 'Tap retry to start over.');
-            showGetKeyButton('🛒 Get Key');
+            showGetKeyButton('🔑 Get Key');
             return;
         }
 
         if (data.gate1Done && data.gate2Done && data.dataCode) {
             setCheckpoints(true, true);
-            if (discordMode) {
-                showDiscordRedirect();
-                return;
-            }
-            setStatus('Verifying — generating key...');
-            startTimers();
-            if (!autoClaimScheduled) {
-                autoClaimScheduled = true;
-                setTimeout(claimKey, AUTO_CLAIM_DELAY);
-            }
+            showSuccessScreen();
             return;
         }
 
         if (data.gate1Done && !data.gate2Done) {
             setCheckpoints(true, false);
             setStatus('Checkpoint 1/2 complete. Starting checkpoint 2/2...');
-            showGetKeyButton('▶ Start Checkpoint 2/2');
-            setTimeout(goToOffer, 2000);
+            showGetKeyButton('🔑 Get Key (2/2)');
             return;
         }
 
         setCheckpoints(false, false);
-        setStatus('Complete checkpoint 1/2 to continue.');
-        showGetKeyButton('🛒 Start Checkpoint 1/2');
+        setStatus('Click "Get Key" to begin.');
+        showGetKeyButton('🔑 Get Key');
     } catch (err) {
         showError('network', 'Connection failed — retrying in 2s...');
         setTimeout(() => bootstrap(), 2500);
@@ -830,7 +488,7 @@ async function bootstrap() {
 function showGetKeyButton(label) {
     const b = document.getElementById('getKeyBtn');
     b.style.display = 'flex';
-    b.textContent = label || '🛒 Get Key';
+    b.textContent = label || '🔑 Get Key';
     b.onclick = goToOffer;
 }
 
@@ -843,28 +501,15 @@ function startTimers() {
     const pEl = document.getElementById('pageTimer');
     kEl.textContent = formatTime(keyTimerRemaining);
     pEl.textContent = formatTime(pageTimerRemaining);
-
     keyTimerInterval = setInterval(() => {
         keyTimerRemaining--;
         kEl.textContent = formatTime(keyTimerRemaining);
         if (keyTimerRemaining <= 30) kEl.classList.add('warning');
-        if (keyTimerRemaining <= 0) {
-            clearInterval(keyTimerInterval); keyTimerInterval = null;
-            showError('expired', 'Claim window expired.');
-            hideButtons();
-            showGetKeyButton('🛒 Start over');
-        }
     }, 1000);
-
     pageTimerInterval = setInterval(() => {
         pageTimerRemaining--;
         pEl.textContent = formatTime(pageTimerRemaining);
-        if (pageTimerRemaining <= 5) pEl.classList.add('warning');
-        if (pageTimerRemaining <= 0) {
-            clearInterval(pageTimerInterval); pageTimerInterval = null;
-            try { window.close(); } catch (e) {}
-            setTimeout(() => { window.location.replace('about:blank'); }, 400);
-        }
+        if (pageTimerRemaining <= 30) pEl.classList.add('warning');
     }, 1000);
 }
 function stopTimers() {
@@ -872,137 +517,6 @@ function stopTimers() {
     if (pageTimerInterval) { clearInterval(pageTimerInterval); pageTimerInterval = null; }
     timersRunning = false;
 }
-
-function copyToClipboard(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        return navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
-    }
-    return Promise.resolve(fallbackCopy(text));
-}
-function fallbackCopy(text) {
-    try {
-        const ta = document.createElement('textarea');
-        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        return true;
-    } catch (e) { return false; }
-}
-
-function revealKey(key) {
-    const kd = document.getElementById('keyDisplay');
-    kd.style.display = 'block';
-    kd.textContent = key;
-    kd.classList.remove('copied');
-    document.getElementById('disclaimer').style.display = 'block';
-
-    copyToClipboard(key).then(() => {
-        kd.classList.add('copied');
-        setTimeout(() => kd.classList.remove('copied'), 3000);
-    });
-    kd.onclick = () => {
-        copyToClipboard(key).then(() => {
-            kd.classList.add('copied');
-            setTimeout(() => kd.classList.remove('copied'), 2000);
-        });
-    };
-
-    localStorage.removeItem('vortex_funnel');
-    try { fetch(WORKER_URL + '/reset', { credentials: 'include' }).catch(() => {}); } catch (e) {}
-
-    startRedirectCountdown();
-}
-
-function startRedirectCountdown() {
-    const banner = document.getElementById('redirectMsg');
-    const cdEl   = document.getElementById('countdown');
-    banner.classList.add('show');
-    let n = REDIRECT_DELAY;
-    cdEl.textContent = String(n);
-    if (redirectInterval) clearInterval(redirectInterval);
-    redirectInterval = setInterval(() => {
-        n--;
-        cdEl.textContent = String(Math.max(0, n));
-        if (n <= 0) {
-            clearInterval(redirectInterval); redirectInterval = null;
-            window.location.replace(RETURN_URL);
-        }
-    }, 1000);
-}
-
-async function claimKey() {
-    if (isClaiming) return;
-    isClaiming = true;
-    const btn = document.getElementById('claimBtn');
-    const original = btn ? btn.innerHTML : '';
-    if (btn) {
-        btn.disabled = true; btn.classList.add('loading');
-        btn.innerHTML = '<span class="spinner"></span> Generating...';
-    }
-    clearError();
-    setStatus('Generating key...');
-
-    try {
-        const sRes = await fetchWithTimeout(`${WORKER_URL}/session`);
-        const sData = await parseResponse(sRes);
-
-        if (!sData.success || !sData.session) {
-            if (sData.error === 'discord_claimed') {
-                showDiscordRedirect();
-                return;
-            }
-            if (sData.error === 'too_many_requests') {
-                let wait = 3;
-                setStatus('Cooling down — retrying in ' + wait + 's...');
-                showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
-                const tick = setInterval(() => {
-                    wait--;
-                    if (wait <= 0) { clearInterval(tick); clearError(); claimKey(); }
-                    else showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
-                }, 1000);
-                if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
-                isClaiming = false; return;
-            }
-            const title = sData.error || 'session_failed';
-            const detail = sData.details ? String(sData.details) : 'Tap retry to generate again.';
-            showError(title, detail);
-            showRetryButton(() => { clearError(); claimKey(); });
-            if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
-            isClaiming = false; return;
-        }
-        session = sData.session;
-
-        const res = await fetchWithTimeout(`${WORKER_URL}/claim`, {
-            method: 'POST',
-            headers: { 'X-Session': session, 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-        });
-        const data = await parseResponse(res);
-
-        if (data.success && data.key) {
-            stopTimers();
-            setStatus(data.alreadyClaimed ? 'Key already claimed.' : '✓ Key generated — copied to clipboard.');
-            hideButtons();
-            revealKey(data.key);
-            return;
-        }
-
-        const title = data.error || 'claim_failed';
-        const detail = data.details ? String(data.details) : 'Tap retry to generate again.';
-        showError(title, detail);
-        showRetryButton(() => { clearError(); claimKey(); });
-        if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
-    } catch (err) {
-        showError('network', (err && err.message) ? String(err.message) : 'Connection failed.');
-        showRetryButton(() => { clearError(); claimKey(); });
-        if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
-    } finally {
-        isClaiming = false;
-    }
-}
-document.getElementById('claimBtn').addEventListener('click', claimKey);
 
 let logoClicks = 0, logoTimer = null;
 document.getElementById('vortexLogo').addEventListener('click', () => {
@@ -1045,8 +559,12 @@ async function adminClaim() {
         const res = await fetchWithTimeout(url);
         const data = await parseResponse(res);
         if (data.success && data.key) {
-            setStatus('✓ Admin key generated — copied to clipboard.');
-            revealKey(data.key);
+            const kd = document.getElementById('keyDisplay');
+            // Reuse the funnel area for admin key display
+            document.getElementById('funnelArea').style.display = 'block';
+            const status = document.getElementById('status');
+            status.innerHTML = `<div style="margin-top:16px; padding:14px; background:rgba(0,0,0,0.6); border:1px solid #3b82f6; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:16px; color:#60a5fa; word-break:break-all;">${data.key}</div>`;
+            hideButtons();
         } else {
             showError(data.error || 'admin_failed', data.details || 'Tap retry.');
             showRetryButton(() => { clearError(); adminClaim(); });
