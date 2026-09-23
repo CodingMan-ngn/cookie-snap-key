@@ -34,18 +34,11 @@ body::after { content: ""; position: fixed; inset: 0; background: radial-gradien
 .btn-claim:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5); }
 .btn-claim:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-claim.loading { opacity: 0.8; pointer-events: none; }
-.btn-admin { background: linear-gradient(135deg, #22c55e, #16a34a); margin-top: 8px; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4); }
-.key-display { display: none; margin-top: 20px; padding: 15px; background: rgba(0, 0, 0, 0.6); border-radius: 12px; border: 1px solid #3b82f6; font-family: 'JetBrains Mono', monospace; font-size: 18px; color: #60a5fa; word-break: break-all; letter-spacing: 1px; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); cursor: pointer; }
-.disclaimer { margin-top: 16px; padding: 12px 16px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.35); border-radius: 12px; font-size: 12px; line-height: 1.6; color: #fbbf24; text-align: left; display: none; }
-.disclaimer strong { color: #f59e0b; display: block; margin-bottom: 6px; font-size: 13px; }
 .status-msg { font-size: 13px; margin-top: 12px; color: #a3b1c6; }
 .error-msg { font-size: 12px; margin-top: 12px; color: #ff6b6b; min-height: 18px; line-height: 1.5; word-break: break-word; text-align: left; padding: 0 4px; }
 .error-msg:not(:empty) { background: rgba(255, 107, 107, 0.08); border: 1px solid rgba(255, 107, 107, 0.3); border-radius: 8px; padding: 10px 12px; }
 .error-msg .err-tag { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #ff9090; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 4px; }
-.retry-btn { display: inline-block; background: transparent; border: 1px solid #3b82f6; color: #60a5fa; padding: 8px 20px; border-radius: 50px; cursor: pointer; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px; transition: background 0.2s; width: 100%; margin-top: 12px; }
-.retry-btn:hover { background: rgba(59, 130, 246, 0.15); }
 
-/* Success screen — after funnel completes */
 .success-screen { display: none; padding: 16px 0 8px; text-align: center; }
 .success-screen.show { display: block; }
 .success-check { font-size: 56px; color: #22c55e; margin-bottom: 8px; filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.5)); }
@@ -55,7 +48,6 @@ body::after { content: ""; position: fixed; inset: 0; background: radial-gradien
 .btn-open-discord { display: flex; align-items: center; justify-content: center; width: 100%; padding: 14px 20px; background: linear-gradient(135deg, #5865F2, #4752c4); color: #fff; border-radius: 12px; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4); border: none; cursor: pointer; margin-top: 8px; }
 .btn-open-discord:hover { transform: translateY(-2px); box-shadow: 0 6px 26px rgba(88, 101, 242, 0.55); }
 
-/* Direct-visit Discord prompt */
 .discord-prompt { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); z-index: 99998; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
 .discord-prompt.show { display: flex; }
 .discord-prompt-box { background: linear-gradient(160deg, #0f172a, #0b1220); border: 1px solid rgba(88, 101, 242, 0.4); border-radius: 20px; padding: 32px 26px; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 0 60px rgba(88, 101, 242, 0.25), inset 0 0 20px rgba(88, 101, 242, 0.08); animation: cardGlow 4s ease-in-out infinite; }
@@ -71,22 +63,18 @@ body::after { content: ""; position: fixed; inset: 0; background: radial-gradien
 .btn-discord { display: flex; align-items: center; justify-content: center; width: 100%; padding: 14px 20px; margin-bottom: 10px; background: linear-gradient(135deg, #5865F2, #4752c4); color: #fff; border-radius: 12px; font-family: 'Orbitron', sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4); }
 .btn-discord:hover { transform: translateY(-2px); box-shadow: 0 6px 26px rgba(88, 101, 242, 0.55); }
 
-/* Dev prompt */
 .dev-prompt { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); z-index: 99999; align-items: center; justify-content: center; padding: 20px; }
 .dev-prompt.show { display: flex; }
 .dev-prompt-box { background: linear-gradient(160deg, #0f172a, #0b1220); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 20px; padding: 28px 24px; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 0 60px rgba(59, 130, 246, 0.2); }
 .dev-prompt-box h3 { font-family: 'Orbitron', sans-serif; font-size: 16px; color: #60a5fa; margin-bottom: 8px; letter-spacing: 2px; }
 .dev-prompt-box p { font-size: 12px; color: #7f8ea3; margin-bottom: 20px; line-height: 1.6; }
 .dev-prompt-box input { width: 100%; padding: 12px 16px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(96, 165, 250, 0.3); border-radius: 10px; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 14px; text-align: center; letter-spacing: 2px; outline: none; transition: border-color 0.2s; margin-bottom: 14px; }
-.dev-prompt-box input:focus { border-color: #60a5fa; box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
 .dev-prompt-box .btn-row { display: flex; gap: 8px; }
 .dev-prompt-box button { flex: 1; padding: 10px; border-radius: 10px; font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; border: none; }
 .dev-prompt-box .btn-confirm { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: #000; }
 .dev-prompt-box .btn-cancel { background: transparent; border: 1px solid rgba(96, 165, 250, 0.3); color: #7f8ea3; }
 .dev-prompt-box .err { font-size: 11px; color: #ff6b6b; margin-top: 10px; min-height: 14px; }
 
-.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0, 0, 0, 0.3); border-top-color: #000; border-radius: 50%; animation: spin 0.7s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 @keyframes cardGlow { 0%,100% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1); } 50% { box-shadow: 0 0 60px rgba(59, 130, 246, 0.5), inset 0 0 30px rgba(59, 130, 246, 0.2); } }
 </style>
@@ -97,8 +85,8 @@ body::after { content: ""; position: fixed; inset: 0; background: radial-gradien
         <svg width="70" height="70" viewBox="0 0 100 100">
             <defs>
                 <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#60a5fa" stop-opacity="1" />
-                    <stop offset="100%" stop-color="#22d3ee" stop-opacity="1" />
+                    <stop offset="0%" stop-color="#60a5fa" />
+                    <stop offset="100%" stop-color="#22d3ee" />
                 </linearGradient>
             </defs>
             <circle cx="50" cy="50" r="40" fill="none" stroke="url(#grad1)" stroke-width="6" stroke-dasharray="10,5" />
@@ -120,8 +108,7 @@ body::after { content: ""; position: fixed; inset: 0; background: radial-gradien
         </div>
         <div class="status-msg" id="status">Loading...</div>
         <button class="btn-claim" id="getKeyBtn" style="display:none;">🔑 Get Key</button>
-        <button class="btn-claim" id="claimBtn" style="display:none;">⚡ Generate Key</button>
-        <button class="btn-claim btn-admin" id="adminClaimBtn" style="display:none;">🔓 Admin Get Key</button>
+        <button class="btn-claim" id="adminClaimBtn" style="display:none;">🔓 Admin Get Key</button>
         <div class="error-msg" id="errorMsg"></div>
     </div>
 
@@ -188,14 +175,11 @@ body::after { content: ""; position: fixed; inset: 0; background: radial-gradien
 'use strict';
 
 const WORKER_URL     = 'https://cookie-snap-keys.j26064135.workers.dev';
-const RETURN_URL     = 'https://cookie-snap-key.pages.dev/';
 const DISCORD_INVITE = 'https://discord.gg/AABUzpzdU5';
 const DISCORD_DMS    = 'https://discord.com/channels/@me';
 
 const FETCH_TIMEOUT    = 15000;
-const CLAIM_WINDOW_MS  = 600000;
 const PAGE_WINDOW_MS   = 5 * 60 * 1000;
-const AUTO_CLAIM_DELAY = 800;
 
 const DEV_PASSWORD = 'invisible';
 const DEV_FLAG_KEY = 'vortex_dev_unlocked';
@@ -249,17 +233,12 @@ try {
     if (window.opener) window.opener = null;
 } catch (e) {}
 
-let session = null;
 let adminMode = false;
 let keyTimerInterval = null;
 let pageTimerInterval = null;
-let keyTimerRemaining = Math.floor(CLAIM_WINDOW_MS / 1000);
 let pageTimerRemaining = Math.floor(PAGE_WINDOW_MS / 1000);
-let isClaiming = false;
 let timersRunning = false;
-let autoClaimScheduled = false;
 let funnelToken = localStorage.getItem('vortex_funnel') || '';
-let discordMode = sessionStorage.getItem('vortex_discord_mode') === '1';
 
 function getParams() { return new URLSearchParams(window.location.search); }
 function formatTime(s) { if (s < 0) s = 0; const m = Math.floor(s / 60), x = s % 60; return `${String(m).padStart(2,'0')}:${String(x).padStart(2,'0')}`; }
@@ -290,14 +269,8 @@ function showError(title, detail) {
     e.appendChild(tag);
     if (detail) e.appendChild(document.createTextNode(detail));
 }
-function showRetryButton(onClick) {
-    const e = document.getElementById('errorMsg');
-    const b = document.createElement('button');
-    b.className = 'retry-btn'; b.textContent = '▶ RETRY'; b.onclick = onClick;
-    e.appendChild(b);
-}
 function hideButtons() {
-    ['claimBtn', 'getKeyBtn', 'adminClaimBtn'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+    ['getKeyBtn', 'adminClaimBtn'].forEach(id => { document.getElementById(id).style.display = 'none'; });
 }
 function setCheckpoints(cp1Done, cp2Done) {
     const c1 = document.getElementById('cp1'), c2 = document.getElementById('cp2');
@@ -315,7 +288,6 @@ function hardReset() {
     localStorage.removeItem('vortex_funnel');
     sessionStorage.removeItem('vortex_discord_mode');
     funnelToken = '';
-    discordMode = false;
     try { fetch(WORKER_URL + '/reset', { credentials: 'include' }).catch(() => {}); } catch (e) {}
     setTimeout(() => { window.location.replace(window.location.pathname); }, 400);
 }
@@ -337,28 +309,27 @@ async function bootstrap() {
     hideButtons();
     document.getElementById('funnelArea').style.display = 'block';
     document.getElementById('successScreen').classList.remove('show');
-    autoClaimScheduled = false;
     setCheckpoints(false, false);
 
     if (adminMode) { setStatus('Admin mode active.'); return; }
 
     const params = getParams();
     const dtParam = params.get('dt') || '';
-    if (dtParam) {
-        discordMode = true;
-        sessionStorage.setItem('vortex_discord_mode', '1');
-    }
-
-    const hasFunnel    = !!localStorage.getItem('vortex_funnel');
     const isReturning  = params.get('cp') === 'return';
     const hasError     = !!params.get('error');
-    const hasStep      = !!params.get('step');
-    if (!dtParam && !hasFunnel && !isReturning && !hasError && !hasStep && !discordMode) {
+    const hasStep      = params.get('step') === '2';
+    const hasVerified  = params.get('verified') === '1';
+
+    // ─── Direct visit → ALWAYS show Discord prompt, wipe stale state ───
+    if (!dtParam && !isReturning && !hasError && !hasStep && !hasVerified) {
+        localStorage.removeItem('vortex_funnel');
+        sessionStorage.removeItem('vortex_discord_mode');
+        funnelToken = '';
         document.getElementById('discordPrompt').classList.add('show');
-        document.getElementById('discordInviteBtn').href = DISCORD_INVITE;
         return;
     }
 
+    // ─── Coming back from funnel ───
     if (isReturning) {
         window.history.replaceState(null, '', '/');
         if (!funnelToken) {
@@ -371,13 +342,8 @@ async function bootstrap() {
             const rr = await fetchWithTimeout(`${WORKER_URL}/gate-recover`, { method: 'POST' });
             const rd = await parseResponse(rr);
 
-            if (rd.success) {
-                if (rd.gate2Done || rd.discordClaimed) {
-                    // Both gates done → success screen
-                    showSuccessScreen();
-                    return;
-                }
-                setTimeout(() => bootstrap(), 300);
+            if (rd.success && (rd.gate2Done || rd.discordClaimed)) {
+                showSuccessScreen();
                 return;
             }
             if (rd.error === 'too_fast') {
@@ -405,6 +371,7 @@ async function bootstrap() {
         return;
     }
 
+    // ─── Error param ───
     const err = params.get('error');
     if (err) {
         const map = {
@@ -419,7 +386,8 @@ async function bootstrap() {
         return;
     }
 
-    if (params.get('step') === '2') {
+    // ─── Step 2 return ───
+    if (hasStep) {
         setCheckpoints(true, false);
         setStatus('Checkpoint 1/2 complete. Starting checkpoint 2/2...');
         showGetKeyButton('🔑 Get Key (2/2)');
@@ -428,6 +396,7 @@ async function bootstrap() {
         return;
     }
 
+    // ─── Fresh funnel from Discord link (?dt=...) ───
     if (params.toString()) window.history.replaceState(null, '', '/');
 
     setStatus('Loading...');
@@ -450,16 +419,10 @@ async function bootstrap() {
         }
 
         if (data.funnel) { funnelToken = data.funnel; localStorage.setItem('vortex_funnel', funnelToken); }
-        if (data.discord) { discordMode = true; sessionStorage.setItem('vortex_discord_mode', '1'); }
 
         if (!data.success) {
-            if (data.action === 'reset') {
-                showError('session_invalid', 'Restarting clean...');
-                setTimeout(hardReset, 1800);
-                return;
-            }
-            showError(data.error || 'funnel_failed', 'Tap retry to start over.');
-            showGetKeyButton('🔑 Get Key');
+            showError(data.error || 'funnel_failed', 'Retrying...');
+            setTimeout(hardReset, 1800);
             return;
         }
 
@@ -468,7 +431,6 @@ async function bootstrap() {
             showSuccessScreen();
             return;
         }
-
         if (data.gate1Done && !data.gate2Done) {
             setCheckpoints(true, false);
             setStatus('Checkpoint 1/2 complete. Starting checkpoint 2/2...');
@@ -499,17 +461,14 @@ function startTimers() {
     if (pageTimerInterval) clearInterval(pageTimerInterval);
     const kEl = document.getElementById('keyTimer');
     const pEl = document.getElementById('pageTimer');
-    kEl.textContent = formatTime(keyTimerRemaining);
+    kEl.textContent = formatTime(600);
     pEl.textContent = formatTime(pageTimerRemaining);
     keyTimerInterval = setInterval(() => {
-        keyTimerRemaining--;
-        kEl.textContent = formatTime(keyTimerRemaining);
-        if (keyTimerRemaining <= 30) kEl.classList.add('warning');
+        // visual only — server enforces
     }, 1000);
     pageTimerInterval = setInterval(() => {
         pageTimerRemaining--;
         pEl.textContent = formatTime(pageTimerRemaining);
-        if (pageTimerRemaining <= 30) pEl.classList.add('warning');
     }, 1000);
 }
 function stopTimers() {
@@ -540,42 +499,33 @@ async function adminLogin() {
         document.getElementById('vortexCard').classList.add('admin-mode');
         document.getElementById('adminStatus').textContent = '🟢 Admin mode active.';
         document.getElementById('adminClaimBtn').style.display = 'flex';
-        document.getElementById('claimBtn').style.display = 'none';
         document.getElementById('getKeyBtn').style.display = 'none';
         setStatus('Admin mode. Generate key.');
     } catch { alert('Network error verifying admin.'); }
 }
 
 async function adminClaim() {
-    if (isClaiming) return;
-    isClaiming = true;
     const btn = document.getElementById('adminClaimBtn');
     const original = btn.innerHTML;
-    btn.disabled = true; btn.classList.add('loading');
-    btn.innerHTML = '<span class="spinner"></span> Generating...';
+    btn.disabled = true;
+    btn.innerHTML = 'Generating...';
     clearError();
     try {
         const url = `${WORKER_URL}/admin?hours=2&pw=${encodeURIComponent(adminLogin._pw || '')}&profile=Admin`;
         const res = await fetchWithTimeout(url);
         const data = await parseResponse(res);
         if (data.success && data.key) {
-            const kd = document.getElementById('keyDisplay');
-            // Reuse the funnel area for admin key display
-            document.getElementById('funnelArea').style.display = 'block';
-            const status = document.getElementById('status');
-            status.innerHTML = `<div style="margin-top:16px; padding:14px; background:rgba(0,0,0,0.6); border:1px solid #3b82f6; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:16px; color:#60a5fa; word-break:break-all;">${data.key}</div>`;
+            document.getElementById('status').innerHTML =
+              `<div style="margin-top:16px; padding:14px; background:rgba(0,0,0,0.6); border:1px solid #3b82f6; border-radius:12px; font-family:'JetBrains Mono',monospace; font-size:16px; color:#60a5fa; word-break:break-all;">${data.key}</div>`;
             hideButtons();
         } else {
             showError(data.error || 'admin_failed', data.details || 'Tap retry.');
-            showRetryButton(() => { clearError(); adminClaim(); });
         }
     } catch (err) {
         showError('network', err.message || 'Connection failed.');
-        showRetryButton(() => { clearError(); adminClaim(); });
     } finally {
-        btn.disabled = false; btn.classList.remove('loading');
+        btn.disabled = false;
         btn.innerHTML = original;
-        isClaiming = false;
     }
 }
 document.getElementById('adminClaimBtn').addEventListener('click', adminClaim);
