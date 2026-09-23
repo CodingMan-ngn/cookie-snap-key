@@ -144,10 +144,7 @@ body::after {
     text-transform: uppercase;
     font-weight: 400;
 }
-.key-display.copied::after {
-    content: "✓ copied";
-    color: #22c55e;
-}
+.key-display.copied::after { content: "✓ copied"; color: #22c55e; }
 .disclaimer {
     margin-top: 16px;
     padding: 12px 16px;
@@ -169,139 +166,89 @@ body::after {
 .error-msg {
     font-size: 12px; margin-top: 12px; color: #ff6b6b;
     min-height: 18px; line-height: 1.5;
-    word-break: break-word;
-    text-align: left;
-    padding: 0 4px;
+    word-break: break-word; text-align: left; padding: 0 4px;
 }
 .error-msg:not(:empty) {
     background: rgba(255, 107, 107, 0.08);
     border: 1px solid rgba(255, 107, 107, 0.3);
-    border-radius: 8px;
-    padding: 10px 12px;
+    border-radius: 8px; padding: 10px 12px;
 }
 .error-msg .err-tag {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: #ff9090;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    display: block;
-    margin-bottom: 4px;
+    font-size: 10px; color: #ff9090;
+    text-transform: uppercase; letter-spacing: 1px;
+    display: block; margin-bottom: 4px;
 }
 .retry-btn {
-    display: inline-block;
-    background: transparent;
-    border: 1px solid #3b82f6;
-    color: #60a5fa;
-    padding: 8px 20px;
-    border-radius: 50px;
-    cursor: pointer;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    transition: background 0.2s;
-    width: 100%;
-    margin-top: 12px;
+    display: inline-block; background: transparent;
+    border: 1px solid #3b82f6; color: #60a5fa;
+    padding: 8px 20px; border-radius: 50px;
+    cursor: pointer; font-family: 'Orbitron', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    transition: background 0.2s; width: 100%; margin-top: 12px;
 }
 .retry-btn:hover { background: rgba(59, 130, 246, 0.15); }
-
 .redirect-msg {
-    display: none;
-    margin-top: 14px;
-    padding: 12px 14px;
+    display: none; margin-top: 14px; padding: 12px 14px;
     background: rgba(34, 197, 94, 0.08);
     border: 1px solid rgba(34, 197, 94, 0.3);
-    border-radius: 12px;
-    font-size: 12px;
-    color: #22c55e;
-    text-align: center;
-    letter-spacing: 0.5px;
-    line-height: 1.6;
+    border-radius: 12px; font-size: 12px;
+    color: #22c55e; text-align: center;
+    letter-spacing: 0.5px; line-height: 1.6;
 }
 .redirect-msg.show { display: block; }
 .redirect-msg .countdown {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
-    font-weight: 700;
-    color: #22c55e;
+    font-size: 15px; font-weight: 700; color: #22c55e;
 }
-
-/* tamper password prompt */
 .dev-prompt {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.92);
-    z-index: 99999;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    display: none; position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.92); z-index: 99999;
+    align-items: center; justify-content: center; padding: 20px;
 }
 .dev-prompt.show { display: flex; }
 .dev-prompt-box {
     background: linear-gradient(160deg, #0f172a, #0b1220);
     border: 1px solid rgba(96, 165, 250, 0.3);
-    border-radius: 20px;
-    padding: 28px 24px;
-    max-width: 360px;
-    width: 100%;
-    text-align: center;
+    border-radius: 20px; padding: 28px 24px;
+    max-width: 360px; width: 100%; text-align: center;
     box-shadow: 0 0 60px rgba(59, 130, 246, 0.2);
 }
 .dev-prompt-box h3 {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 16px;
-    color: #60a5fa;
-    margin-bottom: 8px;
-    letter-spacing: 2px;
+    font-family: 'Orbitron', sans-serif; font-size: 16px;
+    color: #60a5fa; margin-bottom: 8px; letter-spacing: 2px;
 }
 .dev-prompt-box p {
-    font-size: 12px;
-    color: #7f8ea3;
-    margin-bottom: 20px;
-    line-height: 1.6;
+    font-size: 12px; color: #7f8ea3;
+    margin-bottom: 20px; line-height: 1.6;
 }
 .dev-prompt-box input {
-    width: 100%;
-    padding: 12px 16px;
+    width: 100%; padding: 12px 16px;
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(96, 165, 250, 0.3);
-    border-radius: 10px;
-    color: #fff;
+    border-radius: 10px; color: #fff;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    text-align: center;
-    letter-spacing: 2px;
-    outline: none;
-    transition: border-color 0.2s;
-    margin-bottom: 14px;
+    font-size: 14px; text-align: center; letter-spacing: 2px;
+    outline: none; transition: border-color 0.2s; margin-bottom: 14px;
 }
 .dev-prompt-box input:focus {
     border-color: #60a5fa;
     box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
 }
-.dev-prompt-box .btn-row {
-    display: flex;
-    gap: 8px;
-}
+.dev-prompt-box .btn-row { display: flex; gap: 8px; }
 .dev-prompt-box button {
-    flex: 1;
-    padding: 10px;
-    border-radius: 10px;
+    flex: 1; padding: 10px; border-radius: 10px;
     font-family: 'Orbitron', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
+    font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    cursor: pointer; transition: all 0.2s; border: none;
 }
 .dev-prompt-box .btn-confirm {
-    background: linear-gradient(135deg, #60a5fa, #3b82f6);
-    color: #000;
+    background: linear-gradient(135deg, #60a5fa, #3b82f6); color: #000;
 }
-.dev-prompt-box .btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+.dev-prompt-box .btn-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
 .dev-prompt-box .btn-cancel {
     background: transparent;
     border: 1px solid rgba(96, 165, 250, 0.3);
@@ -309,12 +256,9 @@ body::after {
 }
 .dev-prompt-box .btn-cancel:hover { border-color: #60a5fa; color: #60a5fa; }
 .dev-prompt-box .err {
-    font-size: 11px;
-    color: #ff6b6b;
-    margin-top: 10px;
-    min-height: 14px;
+    font-size: 11px; color: #ff6b6b;
+    margin-top: 10px; min-height: 14px;
 }
-
 .spinner {
     display: inline-block; width: 14px; height: 14px;
     border: 2px solid rgba(0, 0, 0, 0.3);
@@ -346,29 +290,14 @@ body::after {
     </div>
     <div class="logo-text">VORTEX</div>
     <div class="vortex-subtitle">Secure Key Claim</div>
-
     <div class="checkpoints">
-        <div class="cp-chip" id="cp1">
-            <span class="dot"></span>
-            <span id="cp1-label">Checkpoint 1/2</span>
-        </div>
-        <div class="cp-chip" id="cp2">
-            <span class="dot"></span>
-            <span id="cp2-label">Checkpoint 2/2</span>
-        </div>
+        <div class="cp-chip" id="cp1"><span class="dot"></span><span id="cp1-label">Checkpoint 1/2</span></div>
+        <div class="cp-chip" id="cp2"><span class="dot"></span><span id="cp2-label">Checkpoint 2/2</span></div>
     </div>
-
     <div class="timer-row">
-        <div class="timer-box">
-            <div class="timer-label">Key Expires In</div>
-            <div class="timer-value" id="keyTimer">10:00</div>
-        </div>
-        <div class="timer-box">
-            <div class="timer-label">Page Closes In</div>
-            <div class="timer-value" id="pageTimer">1:00</div>
-        </div>
+        <div class="timer-box"><div class="timer-label">Key Expires In</div><div class="timer-value" id="keyTimer">10:00</div></div>
+        <div class="timer-box"><div class="timer-label">Page Closes In</div><div class="timer-value" id="pageTimer">1:00</div></div>
     </div>
-
     <div class="status-msg" id="status">Loading...</div>
     <button class="btn-claim" id="getKeyBtn" style="display:none;">🛒 Get Key</button>
     <button class="btn-claim" id="claimBtn" style="display:none;">⚡ Generate Key</button>
@@ -421,14 +350,11 @@ function showDevPrompt() {
     const p = document.getElementById('devPrompt');
     const input = document.getElementById('devPassword');
     const err = document.getElementById('devErr');
-    err.textContent = '';
-    input.value = '';
+    err.textContent = ''; input.value = '';
     p.classList.add('show');
     setTimeout(() => input.focus(), 100);
 }
-function hideDevPrompt() {
-    document.getElementById('devPrompt').classList.remove('show');
-}
+function hideDevPrompt() { document.getElementById('devPrompt').classList.remove('show'); }
 function tryUnlock() {
     const val = document.getElementById('devPassword').value;
     const err = document.getElementById('devErr');
@@ -447,8 +373,7 @@ if (!DEV_UNLOCKED) {
     document.addEventListener('contextmenu', e => { e.preventDefault(); showDevPrompt(); });
     document.addEventListener('keydown', e => {
         const k = e.key.toLowerCase();
-        const isDevKey =
-            e.key === 'F12' ||
+        const isDevKey = e.key === 'F12' ||
             (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k)) ||
             (e.ctrlKey && ['u','s','p'].includes(k)) ||
             (e.metaKey && e.altKey && ['i','j','c'].includes(k));
@@ -457,7 +382,6 @@ if (!DEV_UNLOCKED) {
     document.addEventListener('selectstart', e => e.preventDefault());
     document.addEventListener('dragstart', e => e.preventDefault());
 }
-
 document.getElementById('devConfirm').addEventListener('click', tryUnlock);
 document.getElementById('devCancel').addEventListener('click', hideDevPrompt);
 document.getElementById('devPassword').addEventListener('keydown', e => {
@@ -537,14 +461,12 @@ function hideButtons() {
         document.getElementById(id).style.display = 'none';
     });
 }
-
 function setCheckpoints(cp1Done, cp2Done) {
     const c1 = document.getElementById('cp1');
     const c2 = document.getElementById('cp2');
     const l1 = document.getElementById('cp1-label');
     const l2 = document.getElementById('cp2-label');
-    c1.classList.remove('active', 'done');
-    c2.classList.remove('active', 'done');
+    c1.classList.remove('active', 'done'); c2.classList.remove('active', 'done');
     if (cp1Done) { c1.classList.add('done'); l1.textContent = 'Checkpoint 1/2 ✓'; }
     else { c1.classList.add('active'); l1.textContent = 'Checkpoint 1/2'; }
     if (cp2Done) { c2.classList.add('done'); l2.textContent = 'Checkpoint 2/2 ✓'; }
@@ -555,7 +477,6 @@ function setCheckpoints(cp1Done, cp2Done) {
 function goToOffer() {
     window.location.href = WORKER_URL + '/funnel-goto';
 }
-
 function hardReset() {
     localStorage.removeItem('vortex_funnel');
     funnelToken = '';
@@ -577,6 +498,56 @@ async function bootstrap() {
     if (adminMode) { setStatus('Admin mode active.'); return; }
 
     const params = getParams();
+
+    // boostylink return — call /gate-recover with X-Funnel header
+    if (params.get('cp') === 'return') {
+        window.history.replaceState(null, '', '/');
+
+        if (!funnelToken) {
+            showError('no_funnel', 'Session missing. Starting over...');
+            setTimeout(hardReset, 1500);
+            return;
+        }
+
+        setStatus('Verifying checkpoint...');
+        try {
+            const rr = await fetchWithTimeout(`${WORKER_URL}/gate-recover`, { method: 'POST' });
+            const rd = await parseResponse(rr);
+
+            if (rd.success) {
+                setTimeout(() => bootstrap(), 300);
+                return;
+            }
+            if (rd.error === 'too_fast') {
+                const wait = Math.ceil((rd.waitMs || 3000) / 1000);
+                showError('too_fast', `Complete the offer first. Retrying in ${wait}s...`);
+                let n = wait;
+                const tick = setInterval(() => {
+                    n--;
+                    if (n <= 0) {
+                        clearInterval(tick);
+                        bootstrap();
+                    } else {
+                        showError('too_fast', `Complete the offer first. Retrying in ${n}s...`);
+                    }
+                }, 1000);
+                return;
+            }
+            if (rd.error === 'skip_detected' || rd.error === 'invalid_funnel' || rd.action === 'reset') {
+                showError(rd.error, 'Restarting clean...');
+                setTimeout(hardReset, 1500);
+                return;
+            }
+            showError(rd.error || 'recover_failed', 'Retrying...');
+            setTimeout(() => bootstrap(), 1500);
+            return;
+        } catch (e) {
+            showError('network', 'Recovery failed. Retrying...');
+            setTimeout(() => bootstrap(), 1500);
+            return;
+        }
+    }
+
     const err = params.get('error');
     if (err) {
         const map = {
@@ -679,10 +650,8 @@ function showGetKeyButton(label) {
 function startTimers() {
     if (timersRunning) return;
     timersRunning = true;
-
     if (keyTimerInterval) clearInterval(keyTimerInterval);
     if (pageTimerInterval) clearInterval(pageTimerInterval);
-
     const kEl = document.getElementById('keyTimer');
     const pEl = document.getElementById('pageTimer');
     kEl.textContent = formatTime(keyTimerRemaining);
@@ -711,7 +680,6 @@ function startTimers() {
         }
     }, 1000);
 }
-
 function stopTimers() {
     if (keyTimerInterval)  { clearInterval(keyTimerInterval);  keyTimerInterval = null; }
     if (pageTimerInterval) { clearInterval(pageTimerInterval); pageTimerInterval = null; }
@@ -727,9 +695,7 @@ function copyToClipboard(text) {
 function fallbackCopy(text) {
     try {
         const ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
         document.body.appendChild(ta);
         ta.select();
         document.execCommand('copy');
@@ -749,7 +715,6 @@ function revealKey(key) {
         kd.classList.add('copied');
         setTimeout(() => kd.classList.remove('copied'), 3000);
     });
-
     kd.onclick = () => {
         copyToClipboard(key).then(() => {
             kd.classList.add('copied');
@@ -767,17 +732,14 @@ function startRedirectCountdown() {
     const banner = document.getElementById('redirectMsg');
     const cdEl   = document.getElementById('countdown');
     banner.classList.add('show');
-
     let n = REDIRECT_DELAY;
     cdEl.textContent = String(n);
-
     if (redirectInterval) clearInterval(redirectInterval);
     redirectInterval = setInterval(() => {
         n--;
         cdEl.textContent = String(Math.max(0, n));
         if (n <= 0) {
-            clearInterval(redirectInterval);
-            redirectInterval = null;
+            clearInterval(redirectInterval); redirectInterval = null;
             window.location.replace(RETURN_URL);
         }
     }, 1000);
@@ -806,25 +768,18 @@ async function claimKey() {
                 showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
                 const tick = setInterval(() => {
                     wait--;
-                    if (wait <= 0) {
-                        clearInterval(tick);
-                        clearError();
-                        claimKey();
-                    } else {
-                        showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
-                    }
+                    if (wait <= 0) { clearInterval(tick); clearError(); claimKey(); }
+                    else showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
                 }, 1000);
                 if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
-                isClaiming = false;
-                return;
+                isClaiming = false; return;
             }
             const title = sData.error || 'session_failed';
             const detail = sData.details ? String(sData.details) : 'Tap retry to generate again.';
             showError(title, detail);
             showRetryButton(() => { clearError(); claimKey(); });
             if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
-            isClaiming = false;
-            return;
+            isClaiming = false; return;
         }
         session = sData.session;
 
@@ -840,20 +795,6 @@ async function claimKey() {
             setStatus(data.alreadyClaimed ? 'Key already claimed.' : '✓ Key generated — copied to clipboard.');
             hideButtons();
             revealKey(data.key);
-            return;
-        }
-
-        if (data.error === 'too_many_requests') {
-            let wait = 3;
-            setStatus('Cooling down — retrying in ' + wait + 's...');
-            showError('too_many_requests', 'Retrying automatically in ' + wait + 's...');
-            const tick = setInterval(() => {
-                wait--;
-                if (wait <= 0) { clearInterval(tick); clearError(); claimKey(); }
-                else { showError('too_many_requests', 'Retrying automatically in ' + wait + 's...'); }
-            }, 1000);
-            if (btn) { btn.disabled = false; btn.classList.remove('loading'); btn.innerHTML = original; }
-            isClaiming = false;
             return;
         }
 
@@ -897,9 +838,7 @@ async function adminLogin() {
         document.getElementById('claimBtn').style.display = 'none';
         document.getElementById('getKeyBtn').style.display = 'none';
         setStatus('Admin mode. Generate key.');
-    } catch {
-        alert('Network error verifying admin.');
-    }
+    } catch { alert('Network error verifying admin.'); }
 }
 
 async function adminClaim() {
@@ -910,12 +849,10 @@ async function adminClaim() {
     btn.disabled = true; btn.classList.add('loading');
     btn.innerHTML = '<span class="spinner"></span> Generating...';
     clearError();
-
     try {
         const url = `${WORKER_URL}/admin?hours=2&pw=${encodeURIComponent(adminLogin._pw || '')}&profile=Admin`;
         const res = await fetchWithTimeout(url);
         const data = await parseResponse(res);
-
         if (data.success && data.key) {
             setStatus('✓ Admin key generated — copied to clipboard.');
             revealKey(data.key);
